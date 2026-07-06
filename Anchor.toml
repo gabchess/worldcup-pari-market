@@ -1,0 +1,21 @@
+[toolchain]
+package_manager = "yarn"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+pari_market = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3"
+
+[programs.devnet]
+pari_market = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]

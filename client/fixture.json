@@ -1,0 +1,72 @@
+{
+  "_comment": "Offline fixture mirroring the TxLINE schema. Used while token/activate returns HTTP 500.",
+  "_schema_source": "@srivtx/sports-workbench v0.1.6 + schema-spike.json (C1)",
+  "fixtures": [
+    {
+      "fixtureId": 20629,
+      "homeTeam": "Argentina",
+      "awayTeam": "France",
+      "startTime": 1750000000000,
+      "leagueId": "world_cup",
+      "status": "InProgress"
+    },
+    {
+      "fixtureId": 20630,
+      "homeTeam": "Brazil",
+      "awayTeam": "Germany",
+      "startTime": 1750003600000,
+      "leagueId": "world_cup",
+      "status": "Scheduled"
+    }
+  ],
+  "scores": {
+    "20629": {
+      "fixtureId": 20629,
+      "home_score": 2,
+      "away_score": 1,
+      "current_minute": 73,
+      "home_red_cards": 0,
+      "away_red_cards": 1,
+      "_deferred_note": "Field names are inferred. Confirm against live API."
+    },
+    "20630": {
+      "fixtureId": 20630,
+      "home_score": 0,
+      "away_score": 0,
+      "current_minute": 0,
+      "home_red_cards": 0,
+      "away_red_cards": 0,
+      "_deferred_note": "Field names are inferred. Confirm against live API."
+    }
+  },
+  "odds": {
+    "20629": [
+      {
+        "MessageId": "msg-001-argentina-france-73",
+        "Ts": 1750002680000,
+        "FixtureId": 20629,
+        "Bookmaker": "TxODDS",
+        "BookmakerId": 1,
+        "SuperOddsType": "1X2",
+        "InRunning": true,
+        "PriceNames": ["home", "draw", "away"],
+        "Prices": [1.45, 4.20, 7.50],
+        "Pct": 107.2
+      }
+    ],
+    "20630": [
+      {
+        "MessageId": "msg-002-brazil-germany-pre",
+        "Ts": 1750003500000,
+        "FixtureId": 20630,
+        "Bookmaker": "TxODDS",
+        "BookmakerId": 1,
+        "SuperOddsType": "1X2",
+        "InRunning": false,
+        "PriceNames": ["home", "draw", "away"],
+        "Prices": [2.10, 3.40, 3.20],
+        "Pct": 105.8
+      }
+    ]
+  }
+}

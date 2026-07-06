@@ -1,0 +1,568 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── OKLCH Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --parchment:       oklch(0.942 0.012 79.8);   /* #f0ebe3 page background */
+  --ivory:           oklch(0.977 0.01 87.5);    /* #faf7f0 panels + pills */
+  --white:           oklch(1 0 0);              /* hero card surface */
+
+  /* Text */
+  --ink:             oklch(0.283 0.007 67.5);   /* #2c2926 primary text + hero probability */
+  --ink-prose:       oklch(0.452 0.011 100);    /* #57564f body-sized muted prose (APCA-safe) */
+  --ink-muted:       oklch(0.619 0.01 100.1);   /* #87867f SMALL labels / pills / captions only */
+  --border:          oklch(0.89 0.016 82.8);    /* #e0dacf hairline */
+
+  /* Accents */
+  --terracotta:      oklch(0.617 0.138 39);     /* #c96442 hero Net P&L value ONLY */
+  --terracotta-deep: oklch(0.471 0.11 49.3);    /* #8b4518 loss state */
+  --sage:            oklch(0.527 0.04 152.5);   /* #5a7260 gain state + live-badge text */
+  --sage-soft-bg:    oklch(0.933 0.01 155.1);   /* #e4ebe6 live-badge background */
+  --fresco-ochre:    oklch(0.738 0.075 78.6);   /* #c4a574 diamond dividers + trace left-border */
+  --fresco-red:      oklch(0.533 0.118 21.9);   /* #a64d4d reserved */
+  --aegean:          oklch(0.861 0.02 230.7);   /* #c5d4dc reserved */
+
+  /* Fonts */
+  --font-display: var(--font-cinzel), Georgia, "Times New Roman", serif;
+  --font-body:    var(--font-geist-sans), -apple-system, system-ui, sans-serif;
+  --font-mono:    var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Spacing scale (4pt base) */
+  --xs: 4px;
+  --sm: 8px;
+  --md: 16px;
+  --lg: 24px;
+  --xl: 40px;
+  --gap-section: 40px;
+  --pad-card: 28px;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+html, body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100vh;
+  font-kerning: normal;
+}
+
+h1 {
+  font-family: var(--font-display);
+}
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ─── Number rule — every digit lives here ────────────────────────────────── */
+.num {
+  font-family: var(--font-body);     /* Geist, never Cinzel */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Mono utility ────────────────────────────────────────────────────────── */
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ─── Container ───────────────────────────────────────────────────────────── */
+.container {
+  max-width: 896px;
+  margin-inline: auto;
+  padding-inline: 20px;
+  padding-block: 40px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-inline: 32px;
+  }
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: var(--md);
+  flex-wrap: wrap;
+  margin-bottom: 12px; /* tight — meander hugs the header */
+}
+
+.page-header h1 {
+  font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+/* ─── Live badge ──────────────────────────────────────────────────────────── */
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--sage-soft-bg);
+  border: 1px solid oklch(0.527 0.04 152.5 / 0.22);
+  color: var(--sage);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pulse-wrap {
+  position: relative;
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--sage);
+  opacity: 0.6;
+  animation: pulse-ring 2.5s ease-out infinite;
+}
+
+.pulse-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sage);
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  70%  { transform: scale(2.2); opacity: 0;   }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+/* ─── Devnet pill ─────────────────────────────────────────────────────────── */
+.pill-devnet {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  cursor: default;
+}
+
+/* ─── Program ID link ─────────────────────────────────────────────────────── */
+.program-id-link {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+/* ─── Meander strip ───────────────────────────────────────────────────────── */
+.meander-strip {
+  width: 100%;
+  height: 8px;
+  display: block;
+  margin-bottom: var(--xl); /* meander → hero: 40px */
+  overflow: hidden;
+}
+
+/* ─── 3-up hero card ──────────────────────────────────────────────────────── */
+.hero-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 3px oklch(0.283 0.007 67.5 / 0.06),
+    0 8px 24px oklch(0.283 0.007 67.5 / 0.05),
+    inset 0 1px 0 oklch(1 0 0);
+  padding: var(--pad-card) var(--lg);
+  margin-bottom: var(--md); /* hero → pills: 16px */
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: start;
+}
+
+.hero-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+  padding: var(--sm) var(--lg);
+  position: relative;
+}
+
+/* Diamond divider: all columns except last */
+.hero-col:not(:last-child)::after {
+  content: '◆';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8px;
+  color: oklch(0.738 0.075 78.6 / 0.45);
+  line-height: 1;
+}
+
+.hero-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.hero-number-primary {
+  font-size: clamp(2.25rem, 1.9rem + 1.8vw, 3rem);
+  line-height: 1;
+  color: var(--terracotta);
+}
+
+.hero-number-secondary {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.hero-number-secondary.gain {
+  color: var(--sage);
+}
+
+.hero-pp {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+}
+
+/* Responsive: stack hero columns under 640px */
+@media (max-width: 639px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-col:not(:last-child)::after {
+    display: none;
+  }
+
+  .hero-col:not(:first-child) {
+    border-top: 1px solid var(--border);
+    padding-top: var(--md);
+  }
+
+  .hero-number-primary {
+    font-size: clamp(2.25rem, 8vw, 3rem);
+  }
+}
+
+/* ─── Pill chip row ───────────────────────────────────────────────────────── */
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+  margin-bottom: var(--gap-section); /* pills → positions: 40px */
+}
+
+.pill-chip {
+  padding: 8px 20px;
+  border-radius: 9999px;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 500;
+  cursor: default;
+}
+
+/* ─── Greek panels (positions + reasoning) ────────────────────────────────── */
+.card-panel-greek {
+  background: var(--ivory);
+  border-radius: 12px;
+  padding: var(--lg);
+  position: relative;
+  margin-bottom: var(--lg); /* between panels: 24px */
+}
+
+/* Inset classical frame */
+.card-panel-greek::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid oklch(0.738 0.075 78.6 / 0.25);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.panel-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-bottom: var(--sm);
+}
+
+/* ─── Positions panel rows ────────────────────────────────────────────────── */
+.position-row {
+  padding: var(--sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.position-row:last-of-type {
+  border-bottom: none;
+}
+
+.position-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.field-row:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+.field-value {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ─── Reasoning trace panel ───────────────────────────────────────────────── */
+.trace-prob {
+  font-size: clamp(2.5rem, 2.2rem + 1.5vw, 3rem);
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: var(--sm);
+}
+
+.trace-prob-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-bottom: var(--md);
+}
+
+.trace-prose {
+  font-size: 1rem;
+  color: var(--ink-prose);
+  line-height: 1.75;
+  max-width: 68ch;
+  text-wrap: pretty;
+  margin-bottom: var(--md);
+}
+
+.trace-assessment {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-prose);
+  padding: var(--sm) var(--md);
+  background: var(--parchment);
+  border-left: 4px solid var(--fresco-ochre);
+  border-radius: 0 4px 4px 0;
+  line-height: 1.5;
+  margin-bottom: var(--sm);
+  overflow-wrap: anywhere;
+}
+
+/* ─── Tx hash links ───────────────────────────────────────────────────────── */
+.tx-hash {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.tx-hash:hover {
+  color: var(--ink);
+}
+
+/* ─── Badge: side ─────────────────────────────────────────────────────────── */
+.badge-side {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  color: var(--ink-muted);
+}
+
+/* ─── P&L disclaimer ──────────────────────────────────────────────────────── */
+.pnl-disclaimer {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  margin-top: var(--sm);
+  font-style: italic;
+}
+
+/* ─── Empty states ────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--xl) var(--lg);
+  gap: var(--sm);
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+/* ─── M5 — Pari-Market Live view (S180 delta) ────────────────────────────── */
+
+/* Status badge: LOCKED / RESOLVED variants (OPEN reuses .badge-live) */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-badge-resolved {
+  color: var(--ink);
+  border: 1px solid oklch(0.738 0.075 78.6 / 0.45);
+}
+
+/* Ratio bar: full-width, two segments (YES sage / NO fresco-ochre) */
+.ratio-bar {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-top: var(--lg);
+}
+
+.ratio-bar-segment {
+  height: 100%;
+  transition: width 600ms ease;
+}
+
+.ratio-bar-yes {
+  background: var(--sage);
+}
+
+.ratio-bar-no {
+  background: var(--fresco-ochre);
+}
+
+.ratio-bar-empty {
+  opacity: 0.25;
+}
+
+/* Tx timeline rows */
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  padding: var(--sm) 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.timeline-row:last-of-type {
+  border-bottom: none;
+}
+
+/* Resolution receipt: 4px fresco-ochre left border (mirrors trace-assessment) */
+.receipt-panel {
+  border-left: 4px solid var(--fresco-ochre);
+}
+
+.receipt-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--sm);
+}
+
+.receipt-winner {
+  font-size: 1.75rem;
+  color: var(--sage);
+  margin-bottom: 0;
+}
+
+/* Proof-verified badge: same recipe as .badge-live (sage text on
+ * sage-soft-bg pill), shown only once the market has resolved. */
+.badge-proof-verified {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--sage-soft-bg);
+  border: 1px solid oklch(0.527 0.04 152.5 / 0.22);
+  color: var(--sage);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Fixture reference caption: small ink-muted label distinguishing the
+ * fixture/score line as display metadata, not on-chain state. */
+.receipt-fixture-caption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}

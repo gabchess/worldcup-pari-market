@@ -1,0 +1,13 @@
+{
+  "name": "worldcup-txline-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "poll": "ts-node poll.ts",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}

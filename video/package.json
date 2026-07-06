@@ -1,0 +1,27 @@
+{
+  "name": "worldcup-txodds-demo",
+  "version": "1.0.0",
+  "description": "World Cup TxODDS hackathon demo video",
+  "scripts": {
+    "build": "remotion render",
+    "render": "remotion render demo",
+    "studio": "remotion studio"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.291",
+    "@remotion/cli": "^4.0.291",
+    "@remotion/player": "^4.0.291",
+    "@remotion/media-utils": "^4.0.291",
+    "@remotion/google-fonts": "^4.0.291"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3"
+  },
+  "remotion": {
+    "entryPoint": "src/index.ts"
+  }
+}

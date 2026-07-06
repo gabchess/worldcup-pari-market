@@ -1,0 +1,39 @@
+# M6 Take-2 capture run — S180-reopen, 2026-07-04
+# Footage: video/footage/m6-take2-master.mp4 (4:30.5, 3388x1884@30fps, 406MB)
+# Establishing shot: video/footage/m6-establishing-tabs.mp4 (14.4s)
+# Take-1 backup: video/raw/m6-take1-S180reopen-2026-07-04.mp4 (2:36, wrong-tx + no-receipt gaps)
+# Run params: N_DEPOSITS=5 DEPOSIT_SLEEP_MS_MIN=4000 DEPOSIT_SLEEP_MS_MAX=6000 LOCK_WINDOW_SECONDS=85
+# Result: M5 CAPTURE DEMO: PASS (9/9 devnet transactions confirmed, fixture_used=18172379, market_id=1783175907014)
+
+MARKET_ID=1783175907014
+Market PDA: E6UC9ZBiGSMVtyQsiSqBrCu5t4TJDP8TJnqCKEvxC83j
+Vault PDA:  J5UX6iEDKqz4WuygJTjvY6HhMA9xRA29pXgCBZjKNQsF
+fixture_used: 18172379 — home_goals=2 away_goals=0 (USA vs Bosnia & Herzegovina 2-0)
+daily_scores_roots PDA: FNLRxCxRf3idEDyixYg8uHj9xEVJSuqHvStxwRHf7k6e (epochDay 20636)
+
+=== SIGNATURES (all independently re-confirmed, err=null) ===
+create_market: 4ZyNgBBWQFH5itXx6HpjGWpw2ZLbkMTDnwVWYZ1EhVa8pYiehd2sYvoUtyRgm4AigMzYGi9izeAQa73YGcUFozkT  (slot 473939877)
+deposit_1 (YES 53):  4JeM1AnxnYtZJvQppt5ExFX1aoAXLbtPe6XmVqNJPPwFos9p98kWXbRN2aiSWeHtJpFNyMLdWH15dyXjSTsmY21A  (slot 473939886)
+deposit_2 (NO 28):   65UZ82q2aP4PkuG8Abq66HmjzAMWzckoi6ZHzXPYM2qiKM1drYJZVRTgJCwfAzzsKUcgK6vXUBuLoqv4q1pNLqRn  (slot 473939918)
+deposit_3 (YES 116): 4yAUurU1Agh2PtMwbhMQRupNo7HGam3SJAmSvju2aUYFmVDHPZDs6XaToPaxNve9QooLWXgtUXVDCBsk8PsNAT7D  (slot 473939949)
+deposit_4 (NO 110):  2XhmQcHPyLuJ4wfAMhBv2YsNaNJkzSfmzTz8t5hS91NrYJNRrJ7dmBwZcPAwRRguEjEWuR3fvHCW3W9p6vgM6S6z  (slot 473939971)
+deposit_5 (YES 119): 3GJAnWDKR9KsR6aGydFUH5DeTgR61wUst9wZtdN7D3dLS9dQv3jxJukXx9mtX7LLo27PYM4BJ5VxNen5tjksL2c3  (slot 473939997)
+lock_market: 58mpscoCqcDMEFuMyRM6Z77aN8CCk4XQLU6cv5KTn3C2yiHe7HKSNJCiWT45fmTQjcB3ahNY9BDPrQHEC8XzGr2A  (slot 473940108)
+resolve:     4rDRcWxLhqFa7jfBEoKVvgg3etkzGcQvhgUfX2tA3Q3UtaFvWtagXPeDS94gXw5LBNJwrwN9a32WC45LCbNh9xeF  (slot 473940125, CU 197678 — validate_stat CPI)
+claim_payout: RnDhuKqeenyXUyZeVQbSPpkcD6wxbKRaGGuBpJiwmorCKn8R4oc7iRi2vTD591o3A6gHjnTHPMg1FZQWqqYfHG6  (slot 473940148)
+
+=== Frame-verified beat map (Garry verification, 13 sampled frames + 6x6 contact sheet + 5 full-res) ===
+0:00-0:10   Terminal: command start, clean window                          [PASS]
+0:10-1:35   UI: 5 deposits land, bar 65.4% -> 55.0% -> 67.6%, no bookmarks/Dock  [PASS]
+1:40-2:35   Terminal: lock/resolve/claim output + 9/9 re-confirmation      [PASS]
+2:40-3:45   Explorer: lock tx, then RESOLVE tx Finalized (MAX Confirmations,
+            CU 197,678) + Programs&Logs page with full validate_stat CPI
+            trace ("Evaluate predicate to: true") + decoded proof args     [PASS — the required M6 visual]
+3:48-3:58   UI: RESOLUTION RECEIPT in frame (YES WINS, PROOF VERIFIED,
+            USA vs B&H 2-0, predicate TRUE, pot 426 USDC)                  [PASS]
+3:58-4:30   App-switch to terminal (Dock flash ~3:59), terminal hold       [trim tail at composite]
+
+Known composite notes: sub-second dark blink ~3:00 (page transition), Dock flash at ~3:59
+(after receipt beat completes — usable master span is 0:00-3:58 + end card), cursor visible
+throughout (acceptable), beat ORDER differs from script (terminal-read before Explorer) but
+all required visuals present in required narrative sequence.

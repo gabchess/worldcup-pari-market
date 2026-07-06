@@ -1,0 +1,29 @@
+.anchor
+.DS_Store
+target
+**/*.rs.bk
+node_modules
+test-ledger
+.yarn
+.surfpool
+.arcana
+.venv
+
+# S171 additions
+dashboard/.claude/
+video/public/
+video/node_modules/
+video/out/
+
+# M1.5: devnet test wallet keypair files (pubkeys only in devnet-config.json)
+.wallets/
+video/raw/
+video/footage/
+
+# M6 video post-production scratch + protected final (video ships via YouTube, not git)
+docs/m6-video/work/
+docs/m6-video/backup-m6-final-S182/
+docs/m6-video/*.mp4
+docs/m6-video/*.mp4.lock
+dashboard/tsconfig.tsbuildinfo
+docs/FORM-ANSWERS.md
