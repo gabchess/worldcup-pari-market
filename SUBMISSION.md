@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Live dashboard | [NEW_DASHBOARD_URL] |
+| Live dashboard | https://worldcup-pari-market.vercel.app |
 | Repo | https://github.com/gabchess/worldcup-pari-market |
 | Demo video | https://youtu.be/2Vh6RPLNd-U |
 | Technical docs | [docs/ENDPOINTS.md](https://github.com/gabchess/worldcup-pari-market/blob/main/docs/ENDPOINTS.md) |
