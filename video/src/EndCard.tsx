@@ -29,7 +29,7 @@ const FONT_CINZEL = `'Cinzel', Georgia, serif`;
 const FONT_GEIST = `'Geist', -apple-system, system-ui, sans-serif`;
 const FONT_GEIST_MONO = `'Geist Mono', 'SF Mono', monospace`;
 
-// Beat 7 overlay content — program ID (devnet-config.json pari-market) +
+// Beat 7 overlay content - program ID (devnet-config.json pari-market) +
 // repo/track line, VERBATIM from the locked script's Beat 7 overlay spec.
 const PARI_MARKET_PROGRAM_ID = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3";
 
@@ -49,7 +49,7 @@ export const EndCard: React.FC = () => {
     frame,
     [durationInFrames - 15, durationInFrames],
     [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const opacity = sfOpacity * fadeOut;
 

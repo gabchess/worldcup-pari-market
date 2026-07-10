@@ -72,13 +72,15 @@ Devnet is capped at service level 1: World Cup and international friendlies only
 
 ### `GET /api/market`
 
-Discovers the most recently created Market account via `getProgramAccounts` (filtered to the fixed 144-byte Market account size), decodes it, and returns its state plus a timeline of the transactions that touched it (deposits, lock, resolve, claim), each labeled by decoding the instruction discriminator.
+Resolves the dashboard's default market. If `CANONICAL_MARKET_ID` is set (required in production), resolves that exact market_id via its PDA -- the same derivation the `?id=` route below uses -- and returns its state plus a timeline of the transactions that touched it (deposits, lock, resolve, claim), each labeled by decoding the instruction discriminator. `init_market` is permissionless and accepts any market_id and any SPL mint, so without this pin an attacker could create a market at `market_id = u64::MAX` and permanently occupy the "latest market" slot; pinning to an exact market_id closes that gap (see `codex-audit-report.md`, P1). If `CANONICAL_MARKET_ID` is unset (local dev only), falls back to `getProgramAccounts` filtered to the fixed 144-byte Market account size AND the canonical usdc_mint, validates each account's discriminator, and picks the max market_id among the survivors -- a defense-in-depth scan, not a substitute for the pin (an attacker who reuses the canonical mint on their own market still wins that scan).
+
+The response includes a `source` field: `"pinned"` when the market was resolved via `CANONICAL_MARKET_ID`, or `"scan"` when it fell back to the weaker defense-in-depth scan. A live auditor can read this field directly off the response to confirm the dashboard isn't silently running in scan mode.
 
 ### `GET /api/market?id=<market_id>`
 
-Same shape, but decodes a specific market by ID instead of discovering the latest one.
+Same shape, but decodes a specific market by ID instead of resolving the default. `source` is `null` on this route -- fetching by an explicit ID has no discovery ambiguity to report.
 
-Both routes read a devnet RPC endpoint at request time (no caching), so every poll reflects current on-chain state. Market lookup without an ID scans all program accounts rather than using an index. That's acceptable at hackathon scale and would need revisiting before supporting many concurrent live markets.
+Both routes read a devnet RPC endpoint at request time (no caching), so every poll reflects current on-chain state. Set `CANONICAL_MARKET_ID` (the market_id chosen at deploy time) in the production environment before exposing the dashboard; without it, the default-market view falls back to a scan that is acceptable at hackathon scale but not creator-authenticated.
 
 ## Stat-key dictionary
 

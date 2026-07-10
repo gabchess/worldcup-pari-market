@@ -12,7 +12,7 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 const geistFont = loadGeist();
 const geistMonoFont = loadGeistMono();
 
-// DESIGN.md tokens verbatim — no shader, no new color pairs.
+// DESIGN.md tokens verbatim - no shader, no new color pairs.
 const T = {
   ivory: "#faf7f0",
   ink: "#2c2926",
@@ -142,7 +142,7 @@ export const PiPDiagram: React.FC = () => {
     frame,
     [durationInFrames - 12, durationInFrames],
     [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const containerOpacity = fadeIn * fadeOut;
 

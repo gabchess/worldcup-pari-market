@@ -89,7 +89,12 @@ fn send_many(
 /// Creates a fresh classic-SPL-Token mint, minted by `mint_authority` (the
 /// program payer/authority for these tests -- no CPI relationship implied).
 /// Returns the mint pubkey.
-fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, decimals: u8) -> Pubkey {
+fn create_mint(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint_authority: &Pubkey,
+    decimals: u8,
+) -> Pubkey {
     let mint_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
     let lamports = rent.minimum_balance(<spl_token::state::Mint as solana_program_pack::Pack>::LEN);
@@ -101,12 +106,16 @@ fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, deci
         <spl_token::state::Mint as solana_program_pack::Pack>::LEN as u64,
         &spl_token::ID,
     );
-    let init_ix =
-        spl_token::instruction::initialize_mint2(&spl_token::ID, &mint_kp.pubkey(), mint_authority, None, decimals)
-            .unwrap();
+    let init_ix = spl_token::instruction::initialize_mint2(
+        &spl_token::ID,
+        &mint_kp.pubkey(),
+        mint_authority,
+        None,
+        decimals,
+    )
+    .unwrap();
 
-    send_many(svm, payer, &[payer, &mint_kp], &[create_ix, init_ix])
-        .expect("create_mint failed");
+    send_many(svm, payer, &[payer, &mint_kp], &[create_ix, init_ix]).expect("create_mint failed");
 
     mint_kp.pubkey()
 }
@@ -122,7 +131,8 @@ fn create_token_account(
 ) -> Pubkey {
     let acct_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
-    let lamports = rent.minimum_balance(<spl_token::state::Account as solana_program_pack::Pack>::LEN);
+    let lamports =
+        rent.minimum_balance(<spl_token::state::Account as solana_program_pack::Pack>::LEN);
 
     let create_ix = solana_system_interface::instruction::create_account(
         &payer.pubkey(),
@@ -132,7 +142,8 @@ fn create_token_account(
         &spl_token::ID,
     );
     let init_ix =
-        spl_token::instruction::initialize_account3(&spl_token::ID, &acct_kp.pubkey(), mint, owner).unwrap();
+        spl_token::instruction::initialize_account3(&spl_token::ID, &acct_kp.pubkey(), mint, owner)
+            .unwrap();
 
     send_many(svm, payer, &[payer, &acct_kp], &[create_ix, init_ix])
         .expect("create_token_account failed");
@@ -161,7 +172,9 @@ fn mint_to(
 }
 
 fn token_balance(svm: &LiteSVM, token_account: &Pubkey) -> u64 {
-    let raw = svm.get_account(token_account).expect("token account not found");
+    let raw = svm
+        .get_account(token_account)
+        .expect("token account not found");
     let unpacked = <spl_token::state::Account as solana_program_pack::Pack>::unpack(&raw.data)
         .expect("unpack token account");
     unpacked.amount
@@ -228,14 +241,32 @@ fn setup_market(svm: &mut LiteSVM, market_id: u64, lock_offset_secs: i64) -> Mar
         svm,
         &authority,
         &[&authority],
-        Instruction { program_id: program_id(), accounts, data },
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
     )
     .expect("init_market failed");
 
-    MarketSetup { market, mint, vault, authority, lock_ts }
+    MarketSetup {
+        market,
+        mint,
+        vault,
+        authority,
+        lock_ts,
+    }
 }
 
-fn deposit_ix(market: Pubkey, position: Pubkey, vault: Pubkey, bettor_usdc: Pubkey, bettor: Pubkey, amount: u64, side: bool) -> Instruction {
+fn deposit_ix(
+    market: Pubkey,
+    position: Pubkey,
+    vault: Pubkey,
+    bettor_usdc: Pubkey,
+    bettor: Pubkey,
+    amount: u64,
+    side: bool,
+) -> Instruction {
     let accounts = acc::Deposit {
         market,
         position,
@@ -247,7 +278,11 @@ fn deposit_ix(market: Pubkey, position: Pubkey, vault: Pubkey, bettor_usdc: Pubk
     }
     .to_account_metas(None);
     let data = ix::Deposit { amount, side }.data();
-    Instruction { program_id: program_id(), accounts, data }
+    Instruction {
+        program_id: program_id(),
+        accounts,
+        data,
+    }
 }
 
 fn custom_err(code: u32) -> TransactionError {
@@ -268,8 +303,22 @@ fn test_create_deposit_both_sides_lock_happy_path() {
 
     let yes_usdc = create_token_account(&mut svm, &yes_bettor, &setup.mint, &yes_bettor.pubkey());
     let no_usdc = create_token_account(&mut svm, &no_bettor, &setup.mint, &no_bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &yes_usdc, &setup.authority, 1_000_000);
-    mint_to(&mut svm, &setup.authority, &setup.mint, &no_usdc, &setup.authority, 500_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &yes_usdc,
+        &setup.authority,
+        1_000_000,
+    );
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &no_usdc,
+        &setup.authority,
+        500_000,
+    );
 
     let (yes_position, _) = position_pda(&setup.market, &yes_bettor.pubkey());
     let (no_position, _) = position_pda(&setup.market, &no_bettor.pubkey());
@@ -279,7 +328,15 @@ fn test_create_deposit_both_sides_lock_happy_path() {
         &mut svm,
         &yes_bettor,
         &[&yes_bettor],
-        deposit_ix(setup.market, yes_position, setup.vault, yes_usdc, yes_bettor.pubkey(), 300_000, true),
+        deposit_ix(
+            setup.market,
+            yes_position,
+            setup.vault,
+            yes_usdc,
+            yes_bettor.pubkey(),
+            300_000,
+            true,
+        ),
     )
     .expect("yes deposit failed");
 
@@ -288,7 +345,15 @@ fn test_create_deposit_both_sides_lock_happy_path() {
         &mut svm,
         &no_bettor,
         &[&no_bettor],
-        deposit_ix(setup.market, no_position, setup.vault, no_usdc, no_bettor.pubkey(), 200_000, false),
+        deposit_ix(
+            setup.market,
+            no_position,
+            setup.vault,
+            no_usdc,
+            no_bettor.pubkey(),
+            200_000,
+            false,
+        ),
     )
     .expect("no deposit failed");
 
@@ -300,9 +365,21 @@ fn test_create_deposit_both_sides_lock_happy_path() {
     assert_eq!(market.no_pool, 200_000, "no_pool mismatch");
     assert!(!market.locked, "market should not be locked yet");
 
-    assert_eq!(token_balance(&svm, &yes_usdc), 700_000, "yes bettor balance should decrease by 300_000");
-    assert_eq!(token_balance(&svm, &no_usdc), 300_000, "no bettor balance should decrease by 200_000");
-    assert_eq!(token_balance(&svm, &setup.vault), 500_000, "vault should hold sum of both deposits");
+    assert_eq!(
+        token_balance(&svm, &yes_usdc),
+        700_000,
+        "yes bettor balance should decrease by 300_000"
+    );
+    assert_eq!(
+        token_balance(&svm, &no_usdc),
+        300_000,
+        "no bettor balance should decrease by 200_000"
+    );
+    assert_eq!(
+        token_balance(&svm, &setup.vault),
+        500_000,
+        "vault should hold sum of both deposits"
+    );
 
     let yes_pos_data = svm.get_account(&yes_position).unwrap();
     let yes_pos: pari_market::position::Position =
@@ -313,13 +390,21 @@ fn test_create_deposit_both_sides_lock_happy_path() {
 
     // Warp clock past lock_ts, then lock_market (permissionless -- any signer).
     set_clock_timestamp(&mut svm, setup.lock_ts + 1);
-    let lock_accounts = acc::LockMarket { market: setup.market, caller: no_bettor.pubkey() }.to_account_metas(None);
+    let lock_accounts = acc::LockMarket {
+        market: setup.market,
+        caller: no_bettor.pubkey(),
+    }
+    .to_account_metas(None);
     let lock_data = ix::LockMarket {}.data();
     send(
         &mut svm,
         &no_bettor,
         &[&no_bettor],
-        Instruction { program_id: program_id(), accounts: lock_accounts, data: lock_data },
+        Instruction {
+            program_id: program_id(),
+            accounts: lock_accounts,
+            data: lock_data,
+        },
     )
     .expect("lock_market failed");
 
@@ -334,7 +419,15 @@ fn test_create_deposit_both_sides_lock_happy_path() {
         &mut svm,
         &yes_bettor,
         &[&yes_bettor],
-        deposit_ix(setup.market, yes_position, setup.vault, yes_usdc, yes_bettor.pubkey(), 1, true),
+        deposit_ix(
+            setup.market,
+            yes_position,
+            setup.vault,
+            yes_usdc,
+            yes_bettor.pubkey(),
+            1,
+            true,
+        ),
     )
     .expect_err("deposit after lock should be rejected");
     assert_eq!(err.err, custom_err(6001), "expected MarketLocked (6001)");
@@ -350,7 +443,14 @@ fn test_deposit_after_lock_ts_rejected_before_lock_market_called() {
     let bettor = Keypair::new();
     svm.airdrop(&bettor.pubkey(), 10_000_000_000).unwrap();
     let bettor_usdc = create_token_account(&mut svm, &bettor, &setup.mint, &bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &bettor_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &bettor_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
 
@@ -364,16 +464,31 @@ fn test_deposit_after_lock_ts_rejected_before_lock_market_called() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 100_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            100_000,
+            true,
+        ),
     )
     .expect_err("deposit at/after lock_ts (pre-lock_market) must be rejected");
 
     // DepositAfterLock = index 2 -> code 6002.
-    assert_eq!(err.err, custom_err(6002), "expected DepositAfterLock (6002)");
+    assert_eq!(
+        err.err,
+        custom_err(6002),
+        "expected DepositAfterLock (6002)"
+    );
 
     // Confirm the deposit truly did not land: position PDA was never created,
     // pools untouched.
-    assert!(svm.get_account(&position).is_none(), "position must not have been created");
+    assert!(
+        svm.get_account(&position).is_none(),
+        "position must not have been created"
+    );
     let market_data = svm.get_account(&setup.market).unwrap();
     let market: pari_market::market::Market =
         anchor_lang::AnchorDeserialize::deserialize(&mut &market_data.data[8..]).unwrap();
@@ -389,9 +504,19 @@ fn test_deposit_after_lock_ts_rejected_before_lock_market_called() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 100_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            100_000,
+            true,
+        ),
     )
-    .expect("deposit at exactly lock_ts should still succeed (boundary is exclusive on the lock side)");
+    .expect(
+        "deposit at exactly lock_ts should still succeed (boundary is exclusive on the lock side)",
+    );
 }
 
 // ── Test 3: deposit-zero-amount rejected ────────────────────────────────────
@@ -404,7 +529,14 @@ fn test_deposit_zero_amount_rejected() {
     let bettor = Keypair::new();
     svm.airdrop(&bettor.pubkey(), 10_000_000_000).unwrap();
     let bettor_usdc = create_token_account(&mut svm, &bettor, &setup.mint, &bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &bettor_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &bettor_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
 
@@ -412,7 +544,15 @@ fn test_deposit_zero_amount_rejected() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 0, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            0,
+            true,
+        ),
     )
     .expect_err("zero-amount deposit should be rejected");
 
@@ -430,7 +570,14 @@ fn test_deposit_after_resolved_rejected() {
     let bettor = Keypair::new();
     svm.airdrop(&bettor.pubkey(), 10_000_000_000).unwrap();
     let bettor_usdc = create_token_account(&mut svm, &bettor, &setup.mint, &bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &bettor_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &bettor_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
 
@@ -470,15 +617,29 @@ fn test_deposit_after_resolved_rejected() {
         let updated = svm.get_account(&setup.market).unwrap();
         let market: pari_market::market::Market =
             anchor_lang::AnchorDeserialize::deserialize(&mut &updated.data[8..]).unwrap();
-        assert!(market.locked, "market.locked must be true after the simulated post-resolve write");
-        assert!(market.resolved, "market.resolved must be true after the simulated post-resolve write");
+        assert!(
+            market.locked,
+            "market.locked must be true after the simulated post-resolve write"
+        );
+        assert!(
+            market.resolved,
+            "market.resolved must be true after the simulated post-resolve write"
+        );
     }
 
     let err = send(
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 100_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            100_000,
+            true,
+        ),
     )
     .expect_err("deposit on a resolved (and therefore locked) market must be rejected");
 
@@ -500,7 +661,14 @@ fn test_deposit_wrong_mint_rejected() {
     // A different mint than the market's usdc_mint.
     let wrong_mint = create_mint(&mut svm, &setup.authority, &setup.authority.pubkey(), 6);
     let wrong_mint_usdc = create_token_account(&mut svm, &bettor, &wrong_mint, &bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &wrong_mint, &wrong_mint_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &wrong_mint,
+        &wrong_mint_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
 
@@ -508,7 +676,15 @@ fn test_deposit_wrong_mint_rejected() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, wrong_mint_usdc, bettor.pubkey(), 100_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            wrong_mint_usdc,
+            bettor.pubkey(),
+            100_000,
+            true,
+        ),
     );
 
     assert!(result.is_err(), "deposit with wrong-mint token account should be rejected by Anchor's token::mint constraint");
@@ -524,7 +700,14 @@ fn test_deposit_side_mismatch_on_repeat_rejected() {
     let bettor = Keypair::new();
     svm.airdrop(&bettor.pubkey(), 10_000_000_000).unwrap();
     let bettor_usdc = create_token_account(&mut svm, &bettor, &setup.mint, &bettor.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &bettor_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &bettor_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
 
@@ -533,7 +716,15 @@ fn test_deposit_side_mismatch_on_repeat_rejected() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 100_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            100_000,
+            true,
+        ),
     )
     .expect("first (YES) deposit should succeed");
 
@@ -543,14 +734,25 @@ fn test_deposit_side_mismatch_on_repeat_rejected() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 50_000, true),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            50_000,
+            true,
+        ),
     )
     .expect("second same-side (YES) deposit should accumulate");
 
     let pos_data = svm.get_account(&position).unwrap();
     let pos: pari_market::position::Position =
         anchor_lang::AnchorDeserialize::deserialize(&mut &pos_data.data[8..]).unwrap();
-    assert_eq!(pos.amount, 150_000, "same-side repeat deposit must accumulate, not reset");
+    assert_eq!(
+        pos.amount, 150_000,
+        "same-side repeat deposit must accumulate, not reset"
+    );
     assert!(pos.side, "side must remain YES");
 
     // Third deposit, opposite side (NO): must be rejected with SideMismatch.
@@ -559,7 +761,15 @@ fn test_deposit_side_mismatch_on_repeat_rejected() {
         &mut svm,
         &bettor,
         &[&bettor],
-        deposit_ix(setup.market, position, setup.vault, bettor_usdc, bettor.pubkey(), 10_000, false),
+        deposit_ix(
+            setup.market,
+            position,
+            setup.vault,
+            bettor_usdc,
+            bettor.pubkey(),
+            10_000,
+            false,
+        ),
     )
     .expect_err("opposite-side repeat deposit must be rejected");
 
@@ -570,8 +780,14 @@ fn test_deposit_side_mismatch_on_repeat_rejected() {
     let pos_data = svm.get_account(&position).unwrap();
     let pos: pari_market::position::Position =
         anchor_lang::AnchorDeserialize::deserialize(&mut &pos_data.data[8..]).unwrap();
-    assert_eq!(pos.amount, 150_000, "rejected side-mismatch deposit must not mutate amount");
-    assert!(pos.side, "rejected side-mismatch deposit must not mutate side");
+    assert_eq!(
+        pos.amount, 150_000,
+        "rejected side-mismatch deposit must not mutate amount"
+    );
+    assert!(
+        pos.side,
+        "rejected side-mismatch deposit must not mutate side"
+    );
 }
 
 // ── Test 7: lock_market before lock_ts rejected ─────────────────────────────
@@ -584,14 +800,22 @@ fn test_lock_market_before_lock_ts_rejected() {
     let caller = Keypair::new();
     svm.airdrop(&caller.pubkey(), 10_000_000_000).unwrap();
 
-    let accounts = acc::LockMarket { market: setup.market, caller: caller.pubkey() }.to_account_metas(None);
+    let accounts = acc::LockMarket {
+        market: setup.market,
+        caller: caller.pubkey(),
+    }
+    .to_account_metas(None);
     let data = ix::LockMarket {}.data();
 
     let err = send(
         &mut svm,
         &caller,
         &[&caller],
-        Instruction { program_id: program_id(), accounts, data },
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
     )
     .expect_err("lock_market before lock_ts should be rejected");
 
@@ -612,9 +836,17 @@ fn test_lock_market_double_lock_rejected() {
     set_clock_timestamp(&mut svm, setup.lock_ts + 1);
 
     let make_lock_ix = || {
-        let accounts = acc::LockMarket { market: setup.market, caller: caller.pubkey() }.to_account_metas(None);
+        let accounts = acc::LockMarket {
+            market: setup.market,
+            caller: caller.pubkey(),
+        }
+        .to_account_metas(None);
         let data = ix::LockMarket {}.data();
-        Instruction { program_id: program_id(), accounts, data }
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        }
     };
 
     send(&mut svm, &caller, &[&caller], make_lock_ix()).expect("first lock_market should succeed");
@@ -624,5 +856,130 @@ fn test_lock_market_double_lock_rejected() {
         .expect_err("second lock_market on an already-locked market must be rejected, not a no-op");
 
     // MarketLocked = index 1 -> code 6001.
-    assert_eq!(err.err, custom_err(6001), "expected MarketLocked (6001) on double-lock");
+    assert_eq!(
+        err.err,
+        custom_err(6001),
+        "expected MarketLocked (6001) on double-lock"
+    );
+}
+
+// ── Test 9: init_market stat_b_key/op consistency guard (F1 adversarial
+// re-audit finding). stat_b_key and op must be both Some or both None --
+// a mismatched pair produces a market that can never resolve (resolve.rs's
+// joint-validation check requires both or neither), permanently locking
+// depositor funds with no refund path. ────────────────────────────────────
+
+/// Builds and sends an init_market instruction with parameterized
+/// stat_b_key/op (unlike setup_market/setup above, which hardcodes both to
+/// None). Returns the raw transaction result so callers can assert either a
+/// specific rejection or a clean success, depending on the pair's validity.
+fn try_init_market(
+    svm: &mut LiteSVM,
+    market_id: u64,
+    stat_b_key: Option<u32>,
+    op: Option<BinaryExpression>,
+) -> litesvm::types::TransactionResult {
+    let authority = Keypair::new();
+    svm.airdrop(&authority.pubkey(), 10_000_000_000).unwrap();
+
+    let mint = create_mint(svm, &authority, &authority.pubkey(), 6);
+    let (market, _) = market_pda(market_id);
+    let (vault, _) = vault_pda(&market);
+
+    let now = svm.get_sysvar::<Clock>().unix_timestamp;
+    let lock_ts = now + 3600;
+
+    let accounts = acc::InitMarket {
+        market,
+        usdc_mint: mint,
+        vault,
+        authority: authority.pubkey(),
+        token_program: spl_token::ID,
+        system_program: SYSTEM_PROGRAM_ID,
+        rent: solana_sysvar::rent::ID,
+    }
+    .to_account_metas(None);
+
+    let data = ix::InitMarket {
+        market_id,
+        fixture_id: 18172379,
+        epoch_day: 20632,
+        stat_a_key: 1,
+        stat_b_key,
+        op,
+        predicate: default_predicate(),
+        lock_ts,
+    }
+    .data();
+
+    send(
+        svm,
+        &authority,
+        &[&authority],
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
+    )
+}
+
+#[test]
+fn test_init_market_rejects_stat_b_some_op_none() {
+    let mut svm = svm();
+
+    let err = try_init_market(&mut svm, 100, Some(2), None)
+        .expect_err("stat_b_key=Some/op=None must be rejected -- this is the F1 fund-lock config");
+
+    // InconsistentTwoStatConfig = index 14 -> code 6014.
+    assert_eq!(
+        err.err,
+        custom_err(6014),
+        "expected InconsistentTwoStatConfig (6014) for stat_b_key=Some/op=None"
+    );
+}
+
+#[test]
+fn test_init_market_rejects_stat_b_none_op_some() {
+    let mut svm = svm();
+
+    let err = try_init_market(&mut svm, 101, None, Some(BinaryExpression::Subtract))
+        .expect_err("stat_b_key=None/op=Some must be rejected -- op would silently drop (P3)");
+
+    // InconsistentTwoStatConfig = index 14 -> code 6014.
+    assert_eq!(
+        err.err,
+        custom_err(6014),
+        "expected InconsistentTwoStatConfig (6014) for stat_b_key=None/op=Some"
+    );
+}
+
+#[test]
+fn test_init_market_accepts_both_none_single_stat() {
+    let mut svm = svm();
+
+    try_init_market(&mut svm, 102, None, None)
+        .expect("stat_b_key=None/op=None (single-stat market) must still be accepted");
+
+    let (market, _) = market_pda(102);
+    let market_data = svm.get_account(&market).unwrap();
+    let market_state: pari_market::market::Market =
+        anchor_lang::AnchorDeserialize::deserialize(&mut &market_data.data[8..]).unwrap();
+    assert_eq!(market_state.stat_b_key, None);
+    assert_eq!(market_state.op, None);
+}
+
+#[test]
+fn test_init_market_accepts_both_some_two_stat() {
+    let mut svm = svm();
+
+    try_init_market(&mut svm, 103, Some(2), Some(BinaryExpression::Subtract))
+        .expect("stat_b_key=Some/op=Some (two-stat market) must still be accepted");
+
+    let (market, _) = market_pda(103);
+    let market_data = svm.get_account(&market).unwrap();
+    let market_state: pari_market::market::Market =
+        anchor_lang::AnchorDeserialize::deserialize(&mut &market_data.data[8..]).unwrap();
+    assert_eq!(market_state.stat_b_key, Some(2));
+    assert_eq!(market_state.op, Some(BinaryExpression::Subtract));
 }

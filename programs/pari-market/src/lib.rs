@@ -32,15 +32,7 @@ pub mod pari_market {
         lock_ts: i64,
     ) -> Result<()> {
         instructions::init_market::init_market(
-            ctx,
-            market_id,
-            fixture_id,
-            epoch_day,
-            stat_a_key,
-            stat_b_key,
-            op,
-            predicate,
-            lock_ts,
+            ctx, market_id, fixture_id, epoch_day, stat_a_key, stat_b_key, op, predicate, lock_ts,
         )
     }
 

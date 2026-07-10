@@ -1,4 +1,3 @@
-use anchor_lang::prelude::*;
 use crate::constants::{
     DAILY_SCORES_ROOTS_SEED, MARKET_SEED, RESOLVE_RECOMMENDED_COMPUTE_UNITS, TXORACLE_PROGRAM_ID,
 };
@@ -6,6 +5,7 @@ use crate::cpi::txoracle;
 use crate::errors::PariMarketError;
 use crate::market::Market;
 use crate::proof::ProofNode;
+use anchor_lang::prelude::*;
 
 /// Resolves a market by CPI-ing into TXORACLE_PROGRAM_ID's validate_stat
 /// instruction against the market's stored predicate/stat_a_key/stat_b_key/op,
@@ -90,19 +90,13 @@ pub fn resolve(
 
     let op = match market.stat_b_key {
         Some(expected_stat_b_key) => {
-            let supplied_stat_b = stat_b
-                .as_ref()
-                .ok_or(PariMarketError::FixtureMismatch)?;
+            let supplied_stat_b = stat_b.as_ref().ok_or(PariMarketError::FixtureMismatch)?;
             require_eq!(
                 supplied_stat_b.stat_to_prove.key,
                 expected_stat_b_key,
                 PariMarketError::FixtureMismatch
             );
-            Some(
-                market
-                    .op
-                    .ok_or(PariMarketError::FixtureMismatch)?,
-            )
+            Some(market.op.ok_or(PariMarketError::FixtureMismatch)?)
         }
         None => None,
     };

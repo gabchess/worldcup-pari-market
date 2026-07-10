@@ -1,10 +1,10 @@
+use crate::constants::TXORACLE_PROGRAM_ID;
+use crate::errors::PariMarketError;
+use crate::market::TraderPredicate;
+use crate::proof::ProofNode;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::solana_program::program::{get_return_data, invoke};
-use crate::constants::TXORACLE_PROGRAM_ID;
-use crate::errors::PariMarketError;
-use crate::market::{Comparison, TraderPredicate};
-use crate::proof::ProofNode;
 
 // ── Types mirroring the txoracle IDL (confirmed via M0 live calls) ─────────
 //
@@ -97,7 +97,10 @@ fn encode_validate_stat_args(
 ///
 /// Domain check: the decoded byte must be strictly 0 or 1. Any other value is
 /// a decode failure (InvalidReturnDataDomain), never silently coerced to false.
-fn invoke_and_decode_bool(instruction: &Instruction, account_infos: &[AccountInfo]) -> Result<bool> {
+fn invoke_and_decode_bool(
+    instruction: &Instruction,
+    account_infos: &[AccountInfo],
+) -> Result<bool> {
     invoke(instruction, account_infos)?;
 
     let (returned_program_id, data) =
@@ -163,7 +166,10 @@ pub fn validate_stat_single<'info>(
         data,
     };
 
-    invoke_and_decode_bool(&instruction, std::slice::from_ref(daily_scores_merkle_roots))
+    invoke_and_decode_bool(
+        &instruction,
+        std::slice::from_ref(daily_scores_merkle_roots),
+    )
 }
 
 /// Builds and sends the two-stat validate_stat CPI (e.g. home_goals - away_goals > threshold).
@@ -207,9 +213,8 @@ pub fn validate_stat_two<'info>(
         data,
     };
 
-    invoke_and_decode_bool(&instruction, std::slice::from_ref(daily_scores_merkle_roots))
+    invoke_and_decode_bool(
+        &instruction,
+        std::slice::from_ref(daily_scores_merkle_roots),
+    )
 }
-
-/// Comparison is re-exported here for CPI-arg construction convenience;
-/// canonical definition lives in market::state (mirrors the txoracle IDL).
-pub type _ComparisonAlias = Comparison;

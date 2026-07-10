@@ -2,8 +2,15 @@
  * M5 pari-market live view: server-side devnet RPC reads only. No caching
  * (dynamic = "force-dynamic") so every poll reflects current chain state.
  *
- * GET /api/market            -> discover latest market via getProgramAccounts,
- *                                decode + return it plus its tx timeline.
+ * GET /api/market            -> resolve the default market: CANONICAL_MARKET_ID
+ *                                pinned to an exact PDA if set (required in
+ *                                production), else a mint-filtered scan
+ *                                (local dev only) -- decode + return it plus
+ *                                its tx timeline. See lib/pari.ts for why the
+ *                                pin, not the mint filter, is the guarantee
+ *                                against a permissionless u64::MAX market
+ *                                spoofing the "latest market" slot
+ *                                (codex-audit-report.md P1).
  * GET /api/market?id=<id>    -> decode that specific market_id + timeline.
  *
  * Reads the Helius devnet RPC key from ~/secrets/helius-api-key.txt at point
@@ -16,12 +23,18 @@ import * as path from "path";
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
   PARI_MARKET_PROGRAM_ID,
+  CANONICAL_USDC_MINT,
+  USDC_MINT_OFFSET,
   marketSeedBuffer,
   decodeMarket,
   matchDiscriminator,
   decodeDepositArgs,
   labelTx,
+  parseCanonicalMarketId,
+  refusesUnpinnedProduction,
+  resolveDiscoveredMarket,
   DecodedMarket,
+  CandidateAccount,
 } from "@/lib/pari";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +134,11 @@ export async function GET(request: NextRequest) {
 
     let marketAddr: PublicKey;
     let decoded: DecodedMarket;
+    // "pinned" | "scan" for the no-id discovery branch below; null for the
+    // explicit ?id= branch, where there's no discovery ambiguity to report.
+    // Surfaces Kent's flag: a live auditor can see straight from the response
+    // whether the dashboard is in the weaker fallback-scan mode.
+    let discoverySource: "pinned" | "scan" | null = null;
 
     if (idParam) {
       const marketId = BigInt(idParam);
@@ -136,29 +154,82 @@ export async function GET(request: NextRequest) {
       }
       decoded = decodeMarket(info.data);
     } else {
-      // Discover: getProgramAccounts filtered to the fixed 144-byte Market
-      // account size, decode all, pick the max market_id.
-      const accounts = await connection.getProgramAccounts(programId, {
-        filters: [{ dataSize: MARKET_ACCOUNT_SIZE }],
-      });
-      if (accounts.length === 0) {
+      // Discover: CANONICAL_MARKET_ID pins the dashboard's default market to
+      // an exact PDA (same derivation as the ?id= branch above) so a
+      // permissionless market created at market_id = u64::MAX can never
+      // become the "latest market" (codex-audit-report.md P1). Falls back to
+      // a mint-filtered scan only when unset (local dev); production MUST
+      // set CANONICAL_MARKET_ID -- see docs/ENDPOINTS.md.
+      const canonicalMarketId = parseCanonicalMarketId(
+        process.env.CANONICAL_MARKET_ID,
+      );
+
+      // Refuse to silently serve the weaker fallback on a real Vercel
+      // production deployment that forgot to set CANONICAL_MARKET_ID --
+      // documentation alone doesn't stop that deployment mistake.
+      if (
+        refusesUnpinnedProduction(process.env.VERCEL_ENV, canonicalMarketId)
+      ) {
         return NextResponse.json(
           {
             error:
-              "No market accounts found via getProgramAccounts (dataSize 144)",
+              "CANONICAL_MARKET_ID is required on production deployments (see docs/ENDPOINTS.md) -- refusing to fall back to an unpinned scan.",
+          },
+          { status: 500 },
+        );
+      }
+
+      let pinnedAccount: CandidateAccount | null = null;
+      let scanCandidates: CandidateAccount[] = [];
+
+      if (canonicalMarketId !== null) {
+        const pinnedAddr = marketPda(canonicalMarketId);
+        const info = await connection.getAccountInfo(pinnedAddr);
+        if (info) {
+          pinnedAccount = { pubkey: pinnedAddr.toBase58(), data: info.data };
+        }
+      } else {
+        // Defense-in-depth fallback (local dev only): filter by the fixed
+        // 144-byte Market account size AND the canonical usdc_mint before
+        // decoding (decodeMarket also rejects a mismatched discriminator).
+        // Does not by itself stop an attacker using our canonical mint on
+        // their own market -- see the comment in lib/pari.ts.
+        const accounts = await connection.getProgramAccounts(programId, {
+          filters: [
+            { dataSize: MARKET_ACCOUNT_SIZE },
+            {
+              memcmp: {
+                offset: USDC_MINT_OFFSET,
+                bytes: CANONICAL_USDC_MINT,
+              },
+            },
+          ],
+        });
+        scanCandidates = accounts.map((acc) => ({
+          pubkey: acc.pubkey.toBase58(),
+          data: acc.account.data,
+        }));
+      }
+
+      const result = resolveDiscoveredMarket(
+        canonicalMarketId,
+        pinnedAccount,
+        scanCandidates,
+      );
+      if (!result) {
+        return NextResponse.json(
+          {
+            error:
+              canonicalMarketId !== null
+                ? `Canonical market not found for id ${canonicalMarketId}`
+                : "No canonical market accounts found via getProgramAccounts (dataSize 144, canonical mint)",
           },
           { status: 404 },
         );
       }
-      let best: { pubkey: PublicKey; decoded: DecodedMarket } | null = null;
-      for (const acc of accounts) {
-        const d = decodeMarket(acc.account.data);
-        if (!best || BigInt(d.marketId) > BigInt(best.decoded.marketId)) {
-          best = { pubkey: acc.pubkey, decoded: d };
-        }
-      }
-      marketAddr = best!.pubkey;
-      decoded = best!.decoded;
+      marketAddr = new PublicKey(result.pubkey);
+      decoded = result.decoded;
+      discoverySource = result.source;
     }
 
     const timeline = await buildTimeline(connection, marketAddr);
@@ -167,6 +238,7 @@ export async function GET(request: NextRequest) {
       marketAddress: marketAddr.toBase58(),
       market: decoded,
       timeline,
+      source: discoverySource,
     });
   } catch (err) {
     return NextResponse.json(

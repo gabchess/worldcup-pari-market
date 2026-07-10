@@ -1,9 +1,9 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Transfer};
 use crate::constants::{MARKET_SEED, POSITION_SEED, VAULT_SEED};
 use crate::errors::PariMarketError;
 use crate::market::Market;
 use crate::position::Position;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Transfer};
 
 /// Pays out a resolved market's pooled USDC to a depositor: proportionally
 /// if they backed the winning side, or a full refund of their own deposit
@@ -70,7 +70,11 @@ pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
     let position = &ctx.accounts.position;
 
     let winning_side = market.outcome.ok_or(PariMarketError::MarketNotResolved)?;
-    let winning_pool: u64 = if winning_side { market.yes_pool } else { market.no_pool };
+    let winning_pool: u64 = if winning_side {
+        market.yes_pool
+    } else {
+        market.no_pool
+    };
     let total_pool: u64 = market
         .yes_pool
         .checked_add(market.no_pool)
@@ -111,11 +115,8 @@ pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
         to: ctx.accounts.bettor_usdc.to_account_info(),
         authority: ctx.accounts.market.to_account_info(),
     };
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.key(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_ctx =
+        CpiContext::new_with_signer(ctx.accounts.token_program.key(), cpi_accounts, signer_seeds);
     token::transfer(cpi_ctx, payout)?;
 
     Ok(())

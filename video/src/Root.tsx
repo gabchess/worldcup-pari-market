@@ -8,7 +8,7 @@ const FPS = 30;
 
 // Disclosure text VERBATIM from video/demo-script-LOCKED-S175.md.
 const D1_TEXT =
-  "Demo deposits — operator-seeded to show both sides of the pool. Final payout math is what you'll see resolve on-chain.";
+  "Demo deposits, operator-seeded to show both sides of the pool. Final payout math is what you'll see resolve on-chain.";
 const D2_TEXT =
   "Historical World Cup fixture, TxODDS devnet feed (SL=1, delayed test data), not a live match.";
 const D3_TEXT =
@@ -17,7 +17,7 @@ const D3_TEXT =
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Beat-4 PiP diagram overlay — 3-node CPI diagram, ~7s, rendered on
+      {/* Beat-4 PiP diagram overlay - 3-node CPI diagram, ~7s, rendered on
           transparent background for ffmpeg overlay compositing. */}
       <Composition
         id="pip-diagram"
@@ -28,7 +28,7 @@ export const RemotionRoot: React.FC = () => {
         height={520}
       />
 
-      {/* End card — DESIGN.md tokens, Beat 7 overlay content (program ID +
+      {/* End card - DESIGN.md tokens, Beat 7 overlay content (program ID +
           repo/track line), 8s. */}
       <Composition
         id="end-card"
@@ -39,7 +39,7 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
 
-      {/* Disclosure lower-thirds — transparent overlays, ffmpeg-composited
+      {/* Disclosure lower-thirds - transparent overlays, ffmpeg-composited
           at the exact windows named in the brief (D1/D2/D3). */}
       <Composition
         id="disclosure-d1"

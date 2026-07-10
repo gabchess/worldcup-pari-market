@@ -51,6 +51,7 @@ Every step below is a real devnet transaction, independently re-confirmed, not a
 - The oracle's devnet feed runs on a 60-second delay (TxODDS's free service tier), and the demo settles a historical, already-finished fixture rather than a live in-progress match.
 - The pool deposits shown are operator-seeded so both sides visibly move. No organic trading in this build.
 - Settlement uses one verified proof call, not several independent checks. TxODDS's on-chain Merkle root is the trust anchor, so a single check against it is the design, not a shortcut.
+- `init_market` now validates the `stat_b_key`/`op` two-stat invariant at creation, rejecting the mismatched-Option config that could otherwise create a market with no valid resolution path. Enforced on-chain as of the S191 remediation.
 
 ---
 

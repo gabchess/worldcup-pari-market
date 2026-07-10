@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::constants::MARKET_SEED;
 use crate::errors::PariMarketError;
 use crate::market::Market;
+use anchor_lang::prelude::*;
 
 /// Locks a market, permanently closing the deposit window.
 ///

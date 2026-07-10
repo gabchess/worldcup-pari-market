@@ -14,7 +14,7 @@
   /* Text */
   --ink:             oklch(0.283 0.007 67.5);   /* #2c2926 primary text + hero probability */
   --ink-prose:       oklch(0.452 0.011 100);    /* #57564f body-sized muted prose (APCA-safe) */
-  --ink-muted:       oklch(0.619 0.01 100.1);   /* #87867f SMALL labels / pills / captions only */
+  --ink-muted:       oklch(0.52 0.011 100.1);   /* #6a6962 SMALL labels / pills / captions only -- >=4.5:1 vs. white/ivory/parchment (was sub-AA at #87867f) */
   --border:          oklch(0.89 0.016 82.8);    /* #e0dacf hairline */
 
   /* Accents */

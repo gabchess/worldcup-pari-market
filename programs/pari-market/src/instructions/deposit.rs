@@ -1,9 +1,9 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Transfer};
 use crate::constants::{MARKET_SEED, POSITION_SEED, VAULT_SEED};
 use crate::errors::PariMarketError;
 use crate::market::Market;
 use crate::position::Position;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Transfer};
 
 /// Deposits USDC into a market's YES or NO pool, opening (or adding to) the
 /// caller's Position.

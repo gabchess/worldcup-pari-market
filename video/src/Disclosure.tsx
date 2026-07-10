@@ -6,7 +6,7 @@ const geistFont = loadGeist();
 const FONT_GEIST = `'Geist', -apple-system, system-ui, sans-serif`;
 
 // Shared lower-third disclosure shell. Text is VERBATIM from the locked
-// script (D1/D2/D3) — passed in as a prop, never re-authored here.
+// script (D1/D2/D3) - passed in as a prop, never re-authored here.
 export const Disclosure: React.FC<{ text: string }> = ({ text }) => {
   const frame = useCurrentFrame();
   void geistFont;

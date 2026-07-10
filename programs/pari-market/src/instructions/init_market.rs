@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
 use crate::constants::MARKET_SEED;
 use crate::errors::PariMarketError;
 use crate::market::{BinaryExpression, Market, TraderPredicate};
+use anchor_lang::prelude::*;
 
 /// Creates a Market PDA for a World Cup fixture, keyed on market_id.
 ///
@@ -25,6 +25,15 @@ pub fn init_market(
     require!(
         lock_ts > Clock::get()?.unix_timestamp,
         PariMarketError::LockNotYetDue
+    );
+
+    // stat_b_key and op must be both Some or both None (F1 adversarial
+    // re-audit finding): a mismatched pair produces a market resolve()'s
+    // joint-validation check can never satisfy, permanently locking
+    // depositor funds with no refund path.
+    require!(
+        stat_b_key.is_some() == op.is_some(),
+        PariMarketError::InconsistentTwoStatConfig
     );
 
     let market = &mut ctx.accounts.market;

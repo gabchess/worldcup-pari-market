@@ -2,7 +2,11 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum PariMarketError {
-    // Scaffold-phase guard: every instruction body is a stub until M1.
+    // reserved: unused, retained to preserve published error-code numbering
+    // (AR-595 carve-out). Every instruction body has shipped since M1 --
+    // this variant no longer describes a real scaffold state -- but it is
+    // the first declared variant (code 6000), so removing it would renumber
+    // all 14 variants below it in the deployed program's published ABI.
     #[msg("Instruction not implemented yet (M1 scaffold stub)")]
     NotImplemented,
 
@@ -86,4 +90,13 @@ pub enum PariMarketError {
     // unchanged.
     #[msg("Market has not been resolved yet; no payout is available")]
     MarketNotResolved,
+
+    // init_market() stat_b_key/op consistency guard (F1 adversarial re-audit
+    // finding). stat_b_key and op must be both Some or both None: op is only
+    // meaningful when stat_b_key is Some, and a Some/None mismatch produces a
+    // market that resolve()'s joint-validation check (see resolve.rs) can
+    // never satisfy, permanently locking depositor funds with no refund
+    // path. Appended at the end so existing error codes are unchanged.
+    #[msg("stat_b_key and op must both be Some (two-stat market) or both be None (single-stat market)")]
+    InconsistentTwoStatConfig,
 }

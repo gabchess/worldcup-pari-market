@@ -142,7 +142,12 @@ fn custom_err(code: u32) -> TransactionError {
     TransactionError::InstructionError(0, InstructionError::Custom(code))
 }
 
-fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, decimals: u8) -> Pubkey {
+fn create_mint(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint_authority: &Pubkey,
+    decimals: u8,
+) -> Pubkey {
     let mint_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
     let lamports = rent.minimum_balance(<spl_token::state::Mint as solana_program_pack::Pack>::LEN);
@@ -153,9 +158,14 @@ fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, deci
         <spl_token::state::Mint as solana_program_pack::Pack>::LEN as u64,
         &spl_token::ID,
     );
-    let init_ix =
-        spl_token::instruction::initialize_mint2(&spl_token::ID, &mint_kp.pubkey(), mint_authority, None, decimals)
-            .unwrap();
+    let init_ix = spl_token::instruction::initialize_mint2(
+        &spl_token::ID,
+        &mint_kp.pubkey(),
+        mint_authority,
+        None,
+        decimals,
+    )
+    .unwrap();
     let bh = svm.latest_blockhash();
     let msg = Message::new(&[create_ix, init_ix], Some(&payer.pubkey()));
     let tx = Transaction::new(&[payer, &mint_kp], msg, bh);
@@ -171,7 +181,11 @@ struct MarketSetup {
     authority: Keypair,
 }
 
-fn setup_locked_market(svm: &mut LiteSVM, market_id: u64, predicate: TraderPredicate) -> MarketSetup {
+fn setup_locked_market(
+    svm: &mut LiteSVM,
+    market_id: u64,
+    predicate: TraderPredicate,
+) -> MarketSetup {
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000).unwrap();
 
@@ -207,7 +221,11 @@ fn setup_locked_market(svm: &mut LiteSVM, market_id: u64, predicate: TraderPredi
         svm,
         &authority,
         &[&authority],
-        Instruction { program_id: program_id(), accounts, data },
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
     )
     .expect("init_market failed");
 
@@ -216,21 +234,38 @@ fn setup_locked_market(svm: &mut LiteSVM, market_id: u64, predicate: TraderPredi
     clock.unix_timestamp = lock_ts + 1;
     svm.set_sysvar::<Clock>(&clock);
 
-    let lock_accounts = acc::LockMarket { market, caller: authority.pubkey() }.to_account_metas(None);
+    let lock_accounts = acc::LockMarket {
+        market,
+        caller: authority.pubkey(),
+    }
+    .to_account_metas(None);
     let lock_data = ix::LockMarket {}.data();
     svm.expire_blockhash();
     send(
         svm,
         &authority,
         &[&authority],
-        Instruction { program_id: program_id(), accounts: lock_accounts, data: lock_data },
+        Instruction {
+            program_id: program_id(),
+            accounts: lock_accounts,
+            data: lock_data,
+        },
     )
     .expect("lock_market failed");
 
     MarketSetup { market, authority }
 }
 
-fn resolve_ix(market: Pubkey, ts: i64, fixture_summary: ScoresBatchSummary, fixture_proof: Vec<ProofNode>, main_tree_proof: Vec<ProofNode>, stat_a: StatTerm, stat_b: Option<StatTerm>, caller: Pubkey) -> Instruction {
+fn resolve_ix(
+    market: Pubkey,
+    ts: i64,
+    fixture_summary: ScoresBatchSummary,
+    fixture_proof: Vec<ProofNode>,
+    main_tree_proof: Vec<ProofNode>,
+    stat_a: StatTerm,
+    stat_b: Option<StatTerm>,
+    caller: Pubkey,
+) -> Instruction {
     let (roots, _) = roots_pda(common::EPOCH_DAY);
     let accounts = acc::Resolve {
         market,
@@ -248,7 +283,11 @@ fn resolve_ix(market: Pubkey, ts: i64, fixture_summary: ScoresBatchSummary, fixt
         stat_b,
     }
     .data();
-    Instruction { program_id: program_id(), accounts, data }
+    Instruction {
+        program_id: program_id(),
+        accounts,
+        data,
+    }
 }
 
 fn read_market(svm: &LiteSVM, market: &Pubkey) -> pari_market::market::Market {
@@ -262,7 +301,10 @@ fn read_market(svm: &LiteSVM, market: &Pubkey) -> pari_market::market::Market {
 #[test]
 fn test_resolve_true_predicate_real_cpi() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let setup = setup_locked_market(&mut svm, 100, predicate);
 
     let caller = Keypair::new();
@@ -295,7 +337,10 @@ fn test_resolve_true_predicate_real_cpi() {
     // Comfortably inside RESOLVE_RECOMMENDED_COMPUTE_UNITS = 500_000, and the
     // assertion below pins that budget as a regression guard.
     let meta = result.expect("resolve (true-predicate, real CPI) should succeed");
-    eprintln!("CU consumed (true-predicate resolve, real CPI): {}", meta.compute_units_consumed);
+    eprintln!(
+        "CU consumed (true-predicate resolve, real CPI): {}",
+        meta.compute_units_consumed
+    );
     assert!(
         meta.compute_units_consumed < 500_000,
         "resolve() must fit within RESOLVE_RECOMMENDED_COMPUTE_UNITS (500_000); consumed {}",
@@ -316,7 +361,10 @@ fn test_resolve_true_predicate_real_cpi() {
 #[test]
 fn test_resolve_false_predicate_real_cpi() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 100, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 100,
+        comparison: Comparison::GreaterThan,
+    };
     let setup = setup_locked_market(&mut svm, 101, predicate);
 
     let caller = Keypair::new();
@@ -333,11 +381,19 @@ fn test_resolve_false_predicate_real_cpi() {
         caller.pubkey(),
     );
 
-    send(&mut svm, &caller, &[&caller], ix).expect("resolve (false-predicate, real CPI) should succeed (Ok-with-bool)");
+    send(&mut svm, &caller, &[&caller], ix)
+        .expect("resolve (false-predicate, real CPI) should succeed (Ok-with-bool)");
 
     let market = read_market(&svm, &setup.market);
-    assert!(market.resolved, "market.resolved must be true even on a false outcome");
-    assert_eq!(market.outcome, Some(false), "outcome must be Some(false) -- a VALID resolution, not an error");
+    assert!(
+        market.resolved,
+        "market.resolved must be true even on a false outcome"
+    );
+    assert_eq!(
+        market.outcome,
+        Some(false),
+        "outcome must be Some(false) -- a VALID resolution, not an error"
+    );
 }
 
 // ── Test (c): wrong-root rejected by the seeds constraint ──────────────────
@@ -348,7 +404,10 @@ fn test_resolve_false_predicate_real_cpi() {
 #[test]
 fn test_resolve_wrong_root_rejected() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let setup = setup_locked_market(&mut svm, 102, predicate);
 
     let caller = Keypair::new();
@@ -373,17 +432,24 @@ fn test_resolve_wrong_root_rejected() {
         stat_b: Some(common::stat_b()),
     }
     .data();
-    let ix_obj = Instruction { program_id: program_id(), accounts, data };
+    let ix_obj = Instruction {
+        program_id: program_id(),
+        accounts,
+        data,
+    };
 
-    let err = send(&mut svm, &caller, &[&caller], ix_obj)
-        .expect_err("wrong-epoch_day daily_scores_roots account must be rejected by the seeds constraint");
+    let err = send(&mut svm, &caller, &[&caller], ix_obj).expect_err(
+        "wrong-epoch_day daily_scores_roots account must be rejected by the seeds constraint",
+    );
     // Anchor's seeds-constraint failure is ConstraintSeeds (generic Anchor
     // error, not a PariMarketError custom code) -- assert it's an
     // InstructionError, not a specific custom code, since the exact Anchor
     // internal error code is a framework detail, not part of our contract.
     match err.err {
         TransactionError::InstructionError(0, InstructionError::Custom(_)) => {}
-        other => panic!("expected an InstructionError::Custom (Anchor ConstraintSeeds), got {other:?}"),
+        other => {
+            panic!("expected an InstructionError::Custom (Anchor ConstraintSeeds), got {other:?}")
+        }
     }
 }
 
@@ -392,7 +458,10 @@ fn test_resolve_wrong_root_rejected() {
 #[test]
 fn test_resolve_double_resolve_rejected() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let setup = setup_locked_market(&mut svm, 103, predicate);
 
     let caller = Keypair::new();
@@ -450,12 +519,24 @@ fn test_resolve_on_unlocked_market_rejected() {
         stat_a_key: 1,
         stat_b_key: Some(2),
         op: Some(BinaryExpression::Subtract),
-        predicate: TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan },
+        predicate: TraderPredicate {
+            threshold: 1,
+            comparison: Comparison::GreaterThan,
+        },
         lock_ts: now + 3600,
     }
     .data();
-    send(&mut svm, &authority, &[&authority], Instruction { program_id: program_id(), accounts, data })
-        .expect("init_market failed");
+    send(
+        &mut svm,
+        &authority,
+        &[&authority],
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
+    )
+    .expect("init_market failed");
     // Deliberately do NOT call lock_market().
 
     let caller = Keypair::new();
@@ -475,7 +556,11 @@ fn test_resolve_on_unlocked_market_rejected() {
         .expect_err("resolve on an unlocked market must be rejected");
     // MarketLocked = index 1 -> code 6001 (Resolve's constraint is `market.locked`,
     // so a still-unlocked market fails the same guard).
-    assert_eq!(err.err, custom_err(6001), "expected MarketLocked (6001) on an unlocked market");
+    assert_eq!(
+        err.err,
+        custom_err(6001),
+        "expected MarketLocked (6001) on an unlocked market"
+    );
 }
 
 // ── Test (f): FixtureMismatch -- summary for a different fixture_id rejected pre-CPI ──
@@ -483,7 +568,10 @@ fn test_resolve_on_unlocked_market_rejected() {
 #[test]
 fn test_resolve_fixture_mismatch_rejected_pre_cpi() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let setup = setup_locked_market(&mut svm, 105, predicate);
 
     let caller = Keypair::new();
@@ -513,6 +601,12 @@ fn test_resolve_fixture_mismatch_rejected_pre_cpi() {
 
     // Confirm the rejected call did not mutate market state.
     let market = read_market(&svm, &setup.market);
-    assert!(!market.resolved, "rejected pre-CPI call must not mark the market resolved");
-    assert!(market.outcome.is_none(), "rejected pre-CPI call must not set an outcome");
+    assert!(
+        !market.resolved,
+        "rejected pre-CPI call must not mark the market resolved"
+    );
+    assert!(
+        market.outcome.is_none(),
+        "rejected pre-CPI call must not set an outcome"
+    );
 }

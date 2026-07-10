@@ -12,7 +12,7 @@ pari_market = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3"
 pari_market = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

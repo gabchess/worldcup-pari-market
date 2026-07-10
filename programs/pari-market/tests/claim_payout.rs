@@ -41,7 +41,10 @@ fn vault_pda(market: &Pubkey) -> (Pubkey, u8) {
 }
 
 fn position_pda(market: &Pubkey, bettor: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[POSITION_SEED, market.as_ref(), bettor.as_ref()], &program_id())
+    Pubkey::find_program_address(
+        &[POSITION_SEED, market.as_ref(), bettor.as_ref()],
+        &program_id(),
+    )
 }
 
 fn svm() -> LiteSVM {
@@ -53,21 +56,36 @@ fn svm() -> LiteSVM {
     svm
 }
 
-fn send(svm: &mut LiteSVM, payer: &Keypair, signers: &[&Keypair], instruction: Instruction) -> litesvm::types::TransactionResult {
+fn send(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    signers: &[&Keypair],
+    instruction: Instruction,
+) -> litesvm::types::TransactionResult {
     let bh = svm.latest_blockhash();
     let msg = Message::new(&[instruction], Some(&payer.pubkey()));
     let tx = Transaction::new(signers, msg, bh);
     svm.send_transaction(tx)
 }
 
-fn send_many(svm: &mut LiteSVM, payer: &Keypair, signers: &[&Keypair], instructions: &[Instruction]) -> litesvm::types::TransactionResult {
+fn send_many(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    signers: &[&Keypair],
+    instructions: &[Instruction],
+) -> litesvm::types::TransactionResult {
     let bh = svm.latest_blockhash();
     let msg = Message::new(instructions, Some(&payer.pubkey()));
     let tx = Transaction::new(signers, msg, bh);
     svm.send_transaction(tx)
 }
 
-fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, decimals: u8) -> Pubkey {
+fn create_mint(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint_authority: &Pubkey,
+    decimals: u8,
+) -> Pubkey {
     let mint_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
     let lamports = rent.minimum_balance(<spl_token::state::Mint as solana_program_pack::Pack>::LEN);
@@ -78,15 +96,28 @@ fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, deci
         <spl_token::state::Mint as solana_program_pack::Pack>::LEN as u64,
         &spl_token::ID,
     );
-    let init_ix = spl_token::instruction::initialize_mint2(&spl_token::ID, &mint_kp.pubkey(), mint_authority, None, decimals).unwrap();
+    let init_ix = spl_token::instruction::initialize_mint2(
+        &spl_token::ID,
+        &mint_kp.pubkey(),
+        mint_authority,
+        None,
+        decimals,
+    )
+    .unwrap();
     send_many(svm, payer, &[payer, &mint_kp], &[create_ix, init_ix]).expect("create_mint failed");
     mint_kp.pubkey()
 }
 
-fn create_token_account(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey, owner: &Pubkey) -> Pubkey {
+fn create_token_account(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint: &Pubkey,
+    owner: &Pubkey,
+) -> Pubkey {
     let acct_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
-    let lamports = rent.minimum_balance(<spl_token::state::Account as solana_program_pack::Pack>::LEN);
+    let lamports =
+        rent.minimum_balance(<spl_token::state::Account as solana_program_pack::Pack>::LEN);
     let create_ix = solana_system_interface::instruction::create_account(
         &payer.pubkey(),
         &acct_kp.pubkey(),
@@ -94,24 +125,48 @@ fn create_token_account(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey, owner
         <spl_token::state::Account as solana_program_pack::Pack>::LEN as u64,
         &spl_token::ID,
     );
-    let init_ix = spl_token::instruction::initialize_account3(&spl_token::ID, &acct_kp.pubkey(), mint, owner).unwrap();
-    send_many(svm, payer, &[payer, &acct_kp], &[create_ix, init_ix]).expect("create_token_account failed");
+    let init_ix =
+        spl_token::instruction::initialize_account3(&spl_token::ID, &acct_kp.pubkey(), mint, owner)
+            .unwrap();
+    send_many(svm, payer, &[payer, &acct_kp], &[create_ix, init_ix])
+        .expect("create_token_account failed");
     acct_kp.pubkey()
 }
 
-fn mint_to(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey, dest: &Pubkey, mint_authority: &Keypair, amount: u64) {
-    let ix_obj = spl_token::instruction::mint_to(&spl_token::ID, mint, dest, &mint_authority.pubkey(), &[], amount).unwrap();
+fn mint_to(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint: &Pubkey,
+    dest: &Pubkey,
+    mint_authority: &Keypair,
+    amount: u64,
+) {
+    let ix_obj = spl_token::instruction::mint_to(
+        &spl_token::ID,
+        mint,
+        dest,
+        &mint_authority.pubkey(),
+        &[],
+        amount,
+    )
+    .unwrap();
     send(svm, payer, &[payer, mint_authority], ix_obj).expect("mint_to failed");
 }
 
 fn token_balance(svm: &LiteSVM, token_account: &Pubkey) -> u64 {
-    let raw = svm.get_account(token_account).expect("token account not found");
-    let unpacked = <spl_token::state::Account as solana_program_pack::Pack>::unpack(&raw.data).expect("unpack token account");
+    let raw = svm
+        .get_account(token_account)
+        .expect("token account not found");
+    let unpacked = <spl_token::state::Account as solana_program_pack::Pack>::unpack(&raw.data)
+        .expect("unpack token account");
     unpacked.amount
 }
 
 fn default_predicate() -> TraderPredicate {
-    TraderPredicate { threshold: 0, comparison: Comparison::GreaterThan }
+    TraderPredicate {
+        threshold: 0,
+        comparison: Comparison::GreaterThan,
+    }
 }
 
 struct MarketSetup {
@@ -150,12 +205,34 @@ fn setup_market(svm: &mut LiteSVM, market_id: u64) -> MarketSetup {
         lock_ts: now + 3600,
     }
     .data();
-    send(svm, &authority, &[&authority], Instruction { program_id: program_id(), accounts, data }).expect("init_market failed");
+    send(
+        svm,
+        &authority,
+        &[&authority],
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
+    )
+    .expect("init_market failed");
 
-    MarketSetup { market, mint, vault, authority }
+    MarketSetup {
+        market,
+        mint,
+        vault,
+        authority,
+    }
 }
 
-fn deposit(svm: &mut LiteSVM, setup: &MarketSetup, bettor: &Keypair, bettor_usdc: Pubkey, amount: u64, side: bool) {
+fn deposit(
+    svm: &mut LiteSVM,
+    setup: &MarketSetup,
+    bettor: &Keypair,
+    bettor_usdc: Pubkey,
+    amount: u64,
+    side: bool,
+) {
     let (position, _) = position_pda(&setup.market, &bettor.pubkey());
     let accounts = acc::Deposit {
         market: setup.market,
@@ -169,7 +246,17 @@ fn deposit(svm: &mut LiteSVM, setup: &MarketSetup, bettor: &Keypair, bettor_usdc
     .to_account_metas(None);
     let data = ix::Deposit { amount, side }.data();
     svm.expire_blockhash();
-    send(svm, bettor, &[bettor], Instruction { program_id: program_id(), accounts, data }).expect("deposit failed");
+    send(
+        svm,
+        bettor,
+        &[bettor],
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
+    )
+    .expect("deposit failed");
 }
 
 /// Force-resolves a market: deserialize -> mutate locked/resolved/outcome ->
@@ -192,7 +279,13 @@ fn force_resolve(svm: &mut LiteSVM, market: &Pubkey, outcome: bool) {
 
     svm.set_account(
         *market,
-        Account { lamports: raw.lamports, data, owner, executable: false, rent_epoch: raw.rent_epoch },
+        Account {
+            lamports: raw.lamports,
+            data,
+            owner,
+            executable: false,
+            rent_epoch: raw.rent_epoch,
+        },
     )
     .unwrap();
 }
@@ -203,7 +296,9 @@ fn read_market(svm: &LiteSVM, market: &Pubkey) -> pari_market::market::Market {
 }
 
 fn read_position(svm: &LiteSVM, position: &Pubkey) -> pari_market::position::Position {
-    let raw = svm.get_account(position).expect("position account not found");
+    let raw = svm
+        .get_account(position)
+        .expect("position account not found");
     AnchorDeserialize::deserialize(&mut &raw.data[8..]).expect("deserialize position")
 }
 
@@ -219,7 +314,11 @@ fn claim_ix(setup: &MarketSetup, bettor: &Keypair, bettor_usdc: Pubkey) -> Instr
     }
     .to_account_metas(None);
     let data = ix::ClaimPayout {}.data();
-    Instruction { program_id: program_id(), accounts, data }
+    Instruction {
+        program_id: program_id(),
+        accounts,
+        data,
+    }
 }
 
 fn custom_err(code: u32) -> TransactionError {
@@ -241,8 +340,22 @@ fn test_claim_payout_proportional_happy_path() {
     svm.airdrop(&bettor_b.pubkey(), 10_000_000_000).unwrap();
     let a_usdc = create_token_account(&mut svm, &bettor_a, &setup.mint, &bettor_a.pubkey());
     let b_usdc = create_token_account(&mut svm, &bettor_b, &setup.mint, &bettor_b.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &a_usdc, &setup.authority, 1_000_000);
-    mint_to(&mut svm, &setup.authority, &setup.mint, &b_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &a_usdc,
+        &setup.authority,
+        1_000_000,
+    );
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &b_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     deposit(&mut svm, &setup, &bettor_a, a_usdc, 300_000, true);
     deposit(&mut svm, &setup, &bettor_b, b_usdc, 100_000, false);
@@ -250,16 +363,30 @@ fn test_claim_payout_proportional_happy_path() {
     force_resolve(&mut svm, &setup.market, true); // YES wins
 
     let before = token_balance(&svm, &a_usdc);
-    send(&mut svm, &bettor_a, &[&bettor_a], claim_ix(&setup, &bettor_a, a_usdc)).expect("winner claim should succeed");
+    send(
+        &mut svm,
+        &bettor_a,
+        &[&bettor_a],
+        claim_ix(&setup, &bettor_a, a_usdc),
+    )
+    .expect("winner claim should succeed");
     let after = token_balance(&svm, &a_usdc);
 
-    assert_eq!(after - before, 400_000, "winner's payout must be exactly total_pool (sole winner takes all)");
+    assert_eq!(
+        after - before,
+        400_000,
+        "winner's payout must be exactly total_pool (sole winner takes all)"
+    );
 
     let (position_a, _) = position_pda(&setup.market, &bettor_a.pubkey());
     let pos = read_position(&svm, &position_a);
     assert!(pos.claimed, "position.claimed must be true after claim");
 
-    assert_eq!(token_balance(&svm, &setup.vault), 0, "vault must be drained to 0 (sole winner, no dust)");
+    assert_eq!(
+        token_balance(&svm, &setup.vault),
+        0,
+        "vault must be drained to 0 (sole winner, no dust)"
+    );
 }
 
 // ── Test 2: losing position rejected (winner-only constraint) ──────────────
@@ -275,16 +402,35 @@ fn test_claim_payout_losing_position_rejected() {
     svm.airdrop(&bettor_b.pubkey(), 10_000_000_000).unwrap();
     let a_usdc = create_token_account(&mut svm, &bettor_a, &setup.mint, &bettor_a.pubkey());
     let b_usdc = create_token_account(&mut svm, &bettor_b, &setup.mint, &bettor_b.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &a_usdc, &setup.authority, 1_000_000);
-    mint_to(&mut svm, &setup.authority, &setup.mint, &b_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &a_usdc,
+        &setup.authority,
+        1_000_000,
+    );
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &b_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     deposit(&mut svm, &setup, &bettor_a, a_usdc, 300_000, true);
     deposit(&mut svm, &setup, &bettor_b, b_usdc, 100_000, false);
 
     force_resolve(&mut svm, &setup.market, true); // YES wins, B (NO) loses
 
-    let err = send(&mut svm, &bettor_b, &[&bettor_b], claim_ix(&setup, &bettor_b, b_usdc))
-        .expect_err("losing-side claim (winning pool non-empty) must be rejected");
+    let err = send(
+        &mut svm,
+        &bettor_b,
+        &[&bettor_b],
+        claim_ix(&setup, &bettor_b, b_usdc),
+    )
+    .expect_err("losing-side claim (winning pool non-empty) must be rejected");
     // LosingPosition = index 12 -> code 6012.
     assert_eq!(err.err, custom_err(6012), "expected LosingPosition (6012)");
 }
@@ -299,16 +445,34 @@ fn test_claim_payout_double_claim_rejected() {
     let bettor_a = Keypair::new();
     svm.airdrop(&bettor_a.pubkey(), 10_000_000_000).unwrap();
     let a_usdc = create_token_account(&mut svm, &bettor_a, &setup.mint, &bettor_a.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &a_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &a_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     deposit(&mut svm, &setup, &bettor_a, a_usdc, 100_000, true);
     force_resolve(&mut svm, &setup.market, true);
 
-    send(&mut svm, &bettor_a, &[&bettor_a], claim_ix(&setup, &bettor_a, a_usdc)).expect("first claim should succeed");
+    send(
+        &mut svm,
+        &bettor_a,
+        &[&bettor_a],
+        claim_ix(&setup, &bettor_a, a_usdc),
+    )
+    .expect("first claim should succeed");
 
     svm.expire_blockhash();
-    let err = send(&mut svm, &bettor_a, &[&bettor_a], claim_ix(&setup, &bettor_a, a_usdc))
-        .expect_err("second claim on the same position must be rejected");
+    let err = send(
+        &mut svm,
+        &bettor_a,
+        &[&bettor_a],
+        claim_ix(&setup, &bettor_a, a_usdc),
+    )
+    .expect_err("second claim on the same position must be rejected");
     // AlreadyClaimed = index 4 -> code 6004.
     assert_eq!(err.err, custom_err(6004), "expected AlreadyClaimed (6004)");
 }
@@ -325,22 +489,45 @@ fn test_claim_payout_empty_winning_pool_refund() {
     let bettor_a = Keypair::new();
     svm.airdrop(&bettor_a.pubkey(), 10_000_000_000).unwrap();
     let a_usdc = create_token_account(&mut svm, &bettor_a, &setup.mint, &bettor_a.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &a_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &a_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     deposit(&mut svm, &setup, &bettor_a, a_usdc, 250_000, false); // NO side only
 
     let market = read_market(&svm, &setup.market);
-    assert_eq!(market.yes_pool, 0, "sanity: yes_pool must be 0 (nobody bet YES)");
+    assert_eq!(
+        market.yes_pool, 0,
+        "sanity: yes_pool must be 0 (nobody bet YES)"
+    );
 
     force_resolve(&mut svm, &setup.market, true); // YES wins, but yes_pool == 0
 
     let before = token_balance(&svm, &a_usdc);
-    send(&mut svm, &bettor_a, &[&bettor_a], claim_ix(&setup, &bettor_a, a_usdc))
-        .expect("empty-winning-pool refund must succeed for the NO-side depositor");
+    send(
+        &mut svm,
+        &bettor_a,
+        &[&bettor_a],
+        claim_ix(&setup, &bettor_a, a_usdc),
+    )
+    .expect("empty-winning-pool refund must succeed for the NO-side depositor");
     let after = token_balance(&svm, &a_usdc);
 
-    assert_eq!(after - before, 250_000, "refund must equal exactly the original deposit, not a proportional share");
-    assert_eq!(token_balance(&svm, &setup.vault), 0, "vault must be fully drained after the sole refund");
+    assert_eq!(
+        after - before,
+        250_000,
+        "refund must equal exactly the original deposit, not a proportional share"
+    );
+    assert_eq!(
+        token_balance(&svm, &setup.vault),
+        0,
+        "vault must be fully drained after the sole refund"
+    );
 }
 
 // ── Test 5: vault-PDA-signed transfer-out authority path ───────────────────
@@ -356,7 +543,14 @@ fn test_claim_payout_vault_authority_signs_outbound_transfer() {
     let bettor_a = Keypair::new();
     svm.airdrop(&bettor_a.pubkey(), 10_000_000_000).unwrap();
     let a_usdc = create_token_account(&mut svm, &bettor_a, &setup.mint, &bettor_a.pubkey());
-    mint_to(&mut svm, &setup.authority, &setup.mint, &a_usdc, &setup.authority, 1_000_000);
+    mint_to(
+        &mut svm,
+        &setup.authority,
+        &setup.mint,
+        &a_usdc,
+        &setup.authority,
+        1_000_000,
+    );
 
     deposit(&mut svm, &setup, &bettor_a, a_usdc, 100_000, true);
 
@@ -364,8 +558,12 @@ fn test_claim_payout_vault_authority_signs_outbound_transfer() {
     // separate keypair) before claiming -- this is the precondition the
     // signer-seeds path in claim_payout's body relies on.
     let vault_raw = svm.get_account(&setup.vault).unwrap();
-    let vault_unpacked = <spl_token::state::Account as solana_program_pack::Pack>::unpack(&vault_raw.data).unwrap();
-    assert_eq!(vault_unpacked.owner, setup.market, "vault's SPL token authority must be the Market PDA");
+    let vault_unpacked =
+        <spl_token::state::Account as solana_program_pack::Pack>::unpack(&vault_raw.data).unwrap();
+    assert_eq!(
+        vault_unpacked.owner, setup.market,
+        "vault's SPL token authority must be the Market PDA"
+    );
 
     force_resolve(&mut svm, &setup.market, true);
 
@@ -374,10 +572,19 @@ fn test_claim_payout_vault_authority_signs_outbound_transfer() {
     // authority would reject the transfer instruction). Success here is the
     // runtime proof the [MARKET_SEED, market_id.LE, bump] signer seeds are
     // correct.
-    send(&mut svm, &bettor_a, &[&bettor_a], claim_ix(&setup, &bettor_a, a_usdc))
-        .expect("claim_payout's market-PDA-signed transfer-out must succeed");
+    send(
+        &mut svm,
+        &bettor_a,
+        &[&bettor_a],
+        claim_ix(&setup, &bettor_a, a_usdc),
+    )
+    .expect("claim_payout's market-PDA-signed transfer-out must succeed");
 
-    assert_eq!(token_balance(&svm, &a_usdc), 1_000_000 - 100_000 + 100_000, "full round-trip balance check");
+    assert_eq!(
+        token_balance(&svm, &a_usdc),
+        1_000_000 - 100_000 + 100_000,
+        "full round-trip balance check"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -411,52 +618,118 @@ fn fuzz_cases() -> Vec<FuzzCase> {
         FuzzCase {
             name: "1-unit deposits, many claimers",
             deposits: vec![
-                FuzzDeposit { side: true, amount: 1 },
-                FuzzDeposit { side: true, amount: 1 },
-                FuzzDeposit { side: false, amount: 1 },
-                FuzzDeposit { side: false, amount: 1 },
-                FuzzDeposit { side: true, amount: 1 },
+                FuzzDeposit {
+                    side: true,
+                    amount: 1,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 1,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 1,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 1,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 1,
+                },
             ],
             outcome: true,
         },
         FuzzCase {
             name: "heavily lopsided: 1 vs a large NO pool",
             deposits: vec![
-                FuzzDeposit { side: true, amount: 1 },
-                FuzzDeposit { side: false, amount: 5_000_000_000_000 }, // large, not near u64::MAX (avoid airdrop/mint overflow in test setup)
+                FuzzDeposit {
+                    side: true,
+                    amount: 1,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 5_000_000_000_000,
+                }, // large, not near u64::MAX (avoid airdrop/mint overflow in test setup)
             ],
             outcome: true, // the 1-unit YES depositor takes the whole pool
         },
         FuzzCase {
             name: "dust-generating: amounts that do not divide evenly",
             deposits: vec![
-                FuzzDeposit { side: true, amount: 7 },
-                FuzzDeposit { side: true, amount: 11 },
-                FuzzDeposit { side: true, amount: 13 },
-                FuzzDeposit { side: false, amount: 17 },
-                FuzzDeposit { side: false, amount: 19 },
+                FuzzDeposit {
+                    side: true,
+                    amount: 7,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 11,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 13,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 17,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 19,
+                },
             ],
             outcome: true,
         },
         FuzzCase {
             name: "many claimers in sequence, mixed amounts",
             deposits: vec![
-                FuzzDeposit { side: true, amount: 100_000 },
-                FuzzDeposit { side: true, amount: 250_000 },
-                FuzzDeposit { side: true, amount: 333_333 },
-                FuzzDeposit { side: false, amount: 400_000 },
-                FuzzDeposit { side: false, amount: 150_000 },
-                FuzzDeposit { side: false, amount: 999_999 },
-                FuzzDeposit { side: true, amount: 1 },
+                FuzzDeposit {
+                    side: true,
+                    amount: 100_000,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 250_000,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 333_333,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 400_000,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 150_000,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 999_999,
+                },
+                FuzzDeposit {
+                    side: true,
+                    amount: 1,
+                },
             ],
             outcome: false,
         },
         FuzzCase {
             name: "empty-winning-pool refund case (fuzz-covered)",
             deposits: vec![
-                FuzzDeposit { side: false, amount: 50_000 },
-                FuzzDeposit { side: false, amount: 75_000 },
-                FuzzDeposit { side: false, amount: 1 },
+                FuzzDeposit {
+                    side: false,
+                    amount: 50_000,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 75_000,
+                },
+                FuzzDeposit {
+                    side: false,
+                    amount: 1,
+                },
             ],
             outcome: true, // YES wins but yes_pool == 0 -> every NO position refunds
         },
@@ -493,18 +766,34 @@ fn test_claim_payout_conservation_fuzz() {
             let bettor = Keypair::new_from_array(seed);
             svm.airdrop(&bettor.pubkey(), 20_000_000_000_000).unwrap(); // enough for the lopsided case's large amount + rent
             let usdc = create_token_account(&mut svm, &bettor, &setup.mint, &bettor.pubkey());
-            mint_to(&mut svm, &setup.authority, &setup.mint, &usdc, &setup.authority, dep.amount);
+            mint_to(
+                &mut svm,
+                &setup.authority,
+                &setup.mint,
+                &usdc,
+                &setup.authority,
+                dep.amount,
+            );
 
             deposit(&mut svm, &setup, &bettor, usdc, dep.amount, dep.side);
             total_deposited += dep.amount as u128;
 
-            depositors.push(Depositor { keypair: bettor, usdc, amount: dep.amount, side: dep.side });
+            depositors.push(Depositor {
+                keypair: bettor,
+                usdc,
+                amount: dep.amount,
+                side: dep.side,
+            });
         }
 
         force_resolve(&mut svm, &setup.market, case.outcome);
 
         let market_before_claims = read_market(&svm, &setup.market);
-        let winning_pool: u64 = if case.outcome { market_before_claims.yes_pool } else { market_before_claims.no_pool };
+        let winning_pool: u64 = if case.outcome {
+            market_before_claims.yes_pool
+        } else {
+            market_before_claims.no_pool
+        };
         let total_pool: u64 = market_before_claims.yes_pool + market_before_claims.no_pool;
 
         let mut sum_payouts: u128 = 0;
@@ -516,16 +805,34 @@ fn test_claim_payout_conservation_fuzz() {
                 // Ordinary loser, winning pool non-empty: must be rejected,
                 // never silently zero-paid.
                 svm.expire_blockhash();
-                let err = send(&mut svm, &d.keypair, &[&d.keypair], claim_ix(&setup, &d.keypair, d.usdc))
-                    .expect_err(&format!("[{}] losing position must be rejected, not silently paid", case.name));
-                assert_eq!(err.err, custom_err(6012), "[{}] expected LosingPosition (6012)", case.name);
+                let err = send(
+                    &mut svm,
+                    &d.keypair,
+                    &[&d.keypair],
+                    claim_ix(&setup, &d.keypair, d.usdc),
+                )
+                .expect_err(&format!(
+                    "[{}] losing position must be rejected, not silently paid",
+                    case.name
+                ));
+                assert_eq!(
+                    err.err,
+                    custom_err(6012),
+                    "[{}] expected LosingPosition (6012)",
+                    case.name
+                );
                 continue;
             }
 
             let before = token_balance(&svm, &d.usdc);
             svm.expire_blockhash();
-            send(&mut svm, &d.keypair, &[&d.keypair], claim_ix(&setup, &d.keypair, d.usdc))
-                .unwrap_or_else(|e| panic!("[{}] eligible claim failed: {e:?}", case.name));
+            send(
+                &mut svm,
+                &d.keypair,
+                &[&d.keypair],
+                claim_ix(&setup, &d.keypair, d.usdc),
+            )
+            .unwrap_or_else(|e| panic!("[{}] eligible claim failed: {e:?}", case.name));
             let after = token_balance(&svm, &d.usdc);
             let payout = after - before;
 
@@ -542,7 +849,10 @@ fn test_claim_payout_conservation_fuzz() {
             assert!(
                 (payout as u128) >= expected_floor,
                 "[{}] payout {} below proportional floor {} for depositor amount {}",
-                case.name, payout, expected_floor, d.amount
+                case.name,
+                payout,
+                expected_floor,
+                d.amount
             );
             // And must not exceed it (floor division means it should be
             // exactly equal in this single-instruction, no-rounding-drift
@@ -550,7 +860,8 @@ fn test_claim_payout_conservation_fuzz() {
             // minimum, since our own math is exact floor division).
             assert_eq!(
                 payout as u128, expected_floor,
-                "[{}] payout must equal the exact floor-divided share (no over/under-payment)", case.name
+                "[{}] payout must equal the exact floor-divided share (no over/under-payment)",
+                case.name
             );
 
             sum_payouts += payout as u128;
@@ -560,7 +871,9 @@ fn test_claim_payout_conservation_fuzz() {
         assert!(
             sum_payouts <= total_deposited,
             "[{}] CONSERVATION VIOLATION: sum_payouts {} > total_deposited {}",
-            case.name, sum_payouts, total_deposited
+            case.name,
+            sum_payouts,
+            total_deposited
         );
 
         // (b) no phantom lamports: vault balance must equal exactly what's left.

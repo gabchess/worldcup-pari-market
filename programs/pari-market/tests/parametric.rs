@@ -75,13 +75,21 @@ fn svm_with_real_oracle() -> LiteSVM {
     let data_b64 = parsed["account"]["data"][0]
         .as_str()
         .expect("account.data[0] (base64 payload)");
-    let lamports = parsed["account"]["lamports"].as_u64().expect("account.lamports");
+    let lamports = parsed["account"]["lamports"]
+        .as_u64()
+        .expect("account.lamports");
     let data = base64_decode(data_b64);
 
     let (roots_key, _) = roots_pda(common::EPOCH_DAY);
     svm.set_account(
         roots_key,
-        Account { lamports, data, owner: TXORACLE_PROGRAM_ID, executable: false, rent_epoch: u64::MAX },
+        Account {
+            lamports,
+            data,
+            owner: TXORACLE_PROGRAM_ID,
+            executable: false,
+            rent_epoch: u64::MAX,
+        },
     )
     .expect("seed real daily_scores_roots account");
 
@@ -115,14 +123,24 @@ fn base64_decode(s: &str) -> Vec<u8> {
     out
 }
 
-fn send(svm: &mut LiteSVM, payer: &Keypair, signers: &[&Keypair], instruction: Instruction) -> litesvm::types::TransactionResult {
+fn send(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    signers: &[&Keypair],
+    instruction: Instruction,
+) -> litesvm::types::TransactionResult {
     let bh = svm.latest_blockhash();
     let msg = Message::new(&[instruction], Some(&payer.pubkey()));
     let tx = Transaction::new(signers, msg, bh);
     svm.send_transaction(tx)
 }
 
-fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, decimals: u8) -> Pubkey {
+fn create_mint(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint_authority: &Pubkey,
+    decimals: u8,
+) -> Pubkey {
     let mint_kp = Keypair::new();
     let rent = svm.get_sysvar::<Rent>();
     let lamports = rent.minimum_balance(<spl_token::state::Mint as solana_program_pack::Pack>::LEN);
@@ -133,9 +151,14 @@ fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, deci
         <spl_token::state::Mint as solana_program_pack::Pack>::LEN as u64,
         &spl_token::ID,
     );
-    let init_ix =
-        spl_token::instruction::initialize_mint2(&spl_token::ID, &mint_kp.pubkey(), mint_authority, None, decimals)
-            .unwrap();
+    let init_ix = spl_token::instruction::initialize_mint2(
+        &spl_token::ID,
+        &mint_kp.pubkey(),
+        mint_authority,
+        None,
+        decimals,
+    )
+    .unwrap();
     let bh = svm.latest_blockhash();
     let msg = Message::new(&[create_ix, init_ix], Some(&payer.pubkey()));
     let tx = Transaction::new(&[payer, &mint_kp], msg, bh);
@@ -145,7 +168,11 @@ fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint_authority: &Pubkey, deci
 
 /// Sets up a locked parametric (2-stat, Subtract) market bound to fixture
 /// 18172379 (common::FIXTURE_ID / common::EPOCH_DAY) with the given predicate.
-fn setup_locked_parametric_market(svm: &mut LiteSVM, market_id: u64, predicate: TraderPredicate) -> Pubkey {
+fn setup_locked_parametric_market(
+    svm: &mut LiteSVM,
+    market_id: u64,
+    predicate: TraderPredicate,
+) -> Pubkey {
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000).unwrap();
     let mint = create_mint(svm, &authority, &authority.pubkey(), 6);
@@ -169,25 +196,47 @@ fn setup_locked_parametric_market(svm: &mut LiteSVM, market_id: u64, predicate: 
         market_id,
         fixture_id: common::FIXTURE_ID,
         epoch_day: common::EPOCH_DAY,
-        stat_a_key: 1, // home goals
+        stat_a_key: 1,                        // home goals
         stat_b_key: Some(2), // away goals -- the parametric/compound differentiator
         op: Some(BinaryExpression::Subtract), // home_goals - away_goals
         predicate,
         lock_ts,
     }
     .data();
-    send(svm, &authority, &[&authority], Instruction { program_id: program_id(), accounts, data })
-        .expect("init_market (parametric) failed");
+    send(
+        svm,
+        &authority,
+        &[&authority],
+        Instruction {
+            program_id: program_id(),
+            accounts,
+            data,
+        },
+    )
+    .expect("init_market (parametric) failed");
 
     let mut clock = svm.get_sysvar::<Clock>();
     clock.unix_timestamp = lock_ts + 1;
     svm.set_sysvar::<Clock>(&clock);
 
-    let lock_accounts = acc::LockMarket { market, caller: authority.pubkey() }.to_account_metas(None);
+    let lock_accounts = acc::LockMarket {
+        market,
+        caller: authority.pubkey(),
+    }
+    .to_account_metas(None);
     let lock_data = ix::LockMarket {}.data();
     svm.expire_blockhash();
-    send(svm, &authority, &[&authority], Instruction { program_id: program_id(), accounts: lock_accounts, data: lock_data })
-        .expect("lock_market (parametric) failed");
+    send(
+        svm,
+        &authority,
+        &[&authority],
+        Instruction {
+            program_id: program_id(),
+            accounts: lock_accounts,
+            data: lock_data,
+        },
+    )
+    .expect("lock_market (parametric) failed");
 
     market
 }
@@ -210,7 +259,11 @@ fn resolve_parametric_ix(market: Pubkey, caller: Pubkey) -> Instruction {
         stat_b: Some(common::stat_b()),
     }
     .data();
-    Instruction { program_id: program_id(), accounts, data }
+    Instruction {
+        program_id: program_id(),
+        accounts,
+        data,
+    }
 }
 
 fn read_market(svm: &LiteSVM, market: &Pubkey) -> pari_market::market::Market {
@@ -224,18 +277,30 @@ fn read_market(svm: &LiteSVM, market: &Pubkey) -> pari_market::market::Market {
 #[test]
 fn test_parametric_spread_predicate_resolves_true() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let market = setup_locked_parametric_market(&mut svm, 200, predicate);
 
     let caller = Keypair::new();
     svm.airdrop(&caller.pubkey(), 10_000_000_000).unwrap();
 
-    send(&mut svm, &caller, &[&caller], resolve_parametric_ix(market, caller.pubkey()))
-        .expect("parametric resolve (spread > 1, true) should succeed");
+    send(
+        &mut svm,
+        &caller,
+        &[&caller],
+        resolve_parametric_ix(market, caller.pubkey()),
+    )
+    .expect("parametric resolve (spread > 1, true) should succeed");
 
     let market_state = read_market(&svm, &market);
     assert!(market_state.resolved);
-    assert_eq!(market_state.outcome, Some(true), "spread 2 > threshold 1 must resolve true");
+    assert_eq!(
+        market_state.outcome,
+        Some(true),
+        "spread 2 > threshold 1 must resolve true"
+    );
 }
 
 // ── Test: mirrored false case -- spread > 2 resolves Some(false) ───────────
@@ -244,18 +309,33 @@ fn test_parametric_spread_predicate_resolves_true() {
 #[test]
 fn test_parametric_spread_predicate_resolves_false() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 2, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 2,
+        comparison: Comparison::GreaterThan,
+    };
     let market = setup_locked_parametric_market(&mut svm, 201, predicate);
 
     let caller = Keypair::new();
     svm.airdrop(&caller.pubkey(), 10_000_000_000).unwrap();
 
-    send(&mut svm, &caller, &[&caller], resolve_parametric_ix(market, caller.pubkey()))
-        .expect("parametric resolve (spread > 2, false) should succeed -- Ok-with-bool");
+    send(
+        &mut svm,
+        &caller,
+        &[&caller],
+        resolve_parametric_ix(market, caller.pubkey()),
+    )
+    .expect("parametric resolve (spread > 2, false) should succeed -- Ok-with-bool");
 
     let market_state = read_market(&svm, &market);
-    assert!(market_state.resolved, "false is a valid resolution, market must still be marked resolved");
-    assert_eq!(market_state.outcome, Some(false), "spread 2 is not > threshold 2, must resolve false");
+    assert!(
+        market_state.resolved,
+        "false is a valid resolution, market must still be marked resolved"
+    );
+    assert_eq!(
+        market_state.outcome,
+        Some(false),
+        "spread 2 is not > threshold 2, must resolve false"
+    );
 }
 
 // ── Test: init_market stores op + stat_b_key correctly (the differentiator's
@@ -267,12 +347,26 @@ fn test_parametric_spread_predicate_resolves_false() {
 #[test]
 fn test_init_market_stores_parametric_config() {
     let mut svm = svm_with_real_oracle();
-    let predicate = TraderPredicate { threshold: 1, comparison: Comparison::GreaterThan };
+    let predicate = TraderPredicate {
+        threshold: 1,
+        comparison: Comparison::GreaterThan,
+    };
     let market = setup_locked_parametric_market(&mut svm, 202, predicate);
 
     let market_state = read_market(&svm, &market);
     assert_eq!(market_state.stat_a_key, 1, "stat_a_key must be stored");
-    assert_eq!(market_state.stat_b_key, Some(2), "stat_b_key must be stored as Some(2) for a parametric market");
-    assert_eq!(market_state.op, Some(BinaryExpression::Subtract), "op must be stored as Some(Subtract)");
-    assert_eq!(market_state.predicate, predicate, "predicate must round-trip exactly");
+    assert_eq!(
+        market_state.stat_b_key,
+        Some(2),
+        "stat_b_key must be stored as Some(2) for a parametric market"
+    );
+    assert_eq!(
+        market_state.op,
+        Some(BinaryExpression::Subtract),
+        "op must be stored as Some(Subtract)"
+    );
+    assert_eq!(
+        market_state.predicate, predicate,
+        "predicate must round-trip exactly"
+    );
 }

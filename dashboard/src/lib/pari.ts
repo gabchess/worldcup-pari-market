@@ -149,7 +149,81 @@ function base58Encode(bytes: Buffer): string {
   return out;
 }
 
+// ── Canonical discovery guarantee (closes Codex audit P1 spoofing + P2
+//    decoder findings, codex-audit-report.md 2026-07-10) ───────────────────
+// The Market account carries no creator/authority field (see
+// programs/pari-market/src/market/state.rs), so discovery cannot filter by
+// "official creator" on-chain. Discovery is pinned instead: production sets
+// CANONICAL_MARKET_ID to the exact market_id chosen at deploy time, and the
+// dashboard resolves that market directly via its PDA (same derivation as
+// the ?id= route) -- Anchor's `init` constraint means an attacker cannot
+// occupy that PDA once it exists, so a market created at market_id =
+// u64::MAX is never even looked at. selectCanonicalMarket below is a
+// defense-in-depth fallback used ONLY when CANONICAL_MARKET_ID is unset
+// (local dev): it filters getProgramAccounts results by the canonical
+// usdc_mint and a valid Market discriminator before picking the max
+// market_id. It does NOT by itself stop an attacker who sets their own
+// market's usdc_mint to our canonical mint -- CANONICAL_MARKET_ID pinning is
+// the real guarantee and MUST be set in production.
+
+export const CANONICAL_USDC_MINT =
+  "55aYKjhdFfHFbwuqw4wF1wToJuubFQBnmCNCfe24CXK";
+
+/** Byte offset of the usdc_mint field within a decoded Market account (see
+ * the layout comment above decodeMarket()). Reused by both the local mint
+ * check below and the dashboard route's getProgramAccounts memcmp filter. */
+export const USDC_MINT_OFFSET = 58;
+
+/** sha256("account:Market")[0:8] -- Anchor's account discriminator for the
+ * Market struct. Verified against programs/pari-market/src/market/state.rs
+ * (struct Market) via sha256; matches exactly. */
+export const MARKET_DISCRIMINATOR = [219, 190, 213, 55, 0, 227, 198, 154];
+
+/** Parse the CANONICAL_MARKET_ID env var. Unset/blank -> null (fallback scan
+ * mode, local dev only). Set -> the pinned market_id as a bigint. */
+export function parseCanonicalMarketId(
+  envValue: string | undefined,
+): bigint | null {
+  const trimmed = envValue?.trim();
+  if (!trimmed) return null;
+  return BigInt(trimmed);
+}
+
+/** True iff a Vercel production deployment (VERCEL_ENV === "production")
+ * would silently fall back to the unpinned defense-in-depth scan -- i.e.
+ * CANONICAL_MARKET_ID is documented as required but was never actually set
+ * in that deployment's environment. The route MUST refuse this case (500)
+ * rather than silently serving the weaker guarantee. */
+export function refusesUnpinnedProduction(
+  vercelEnv: string | undefined,
+  canonicalMarketId: bigint | null,
+): boolean {
+  return vercelEnv === "production" && canonicalMarketId === null;
+}
+
+function hasMarketDiscriminator(data: Buffer): boolean {
+  if (data.length < 8) return false;
+  for (let i = 0; i < 8; i++) {
+    if (data[i] !== MARKET_DISCRIMINATOR[i]) return false;
+  }
+  return true;
+}
+
+/** True iff the account's usdc_mint field matches CANONICAL_USDC_MINT. */
+export function hasCanonicalMint(data: Buffer): boolean {
+  if (data.length < USDC_MINT_OFFSET + 32) return false;
+  return (
+    base58Encode(data.subarray(USDC_MINT_OFFSET, USDC_MINT_OFFSET + 32)) ===
+    CANONICAL_USDC_MINT
+  );
+}
+
 export function decodeMarket(buffer: Buffer): DecodedMarket {
+  if (!hasMarketDiscriminator(buffer)) {
+    throw new Error(
+      "decodeMarket: account discriminator does not match Market (Codex P2 decoder guard)",
+    );
+  }
   let offset = 8; // skip 8-byte account discriminator
 
   const marketId = buffer.readBigUInt64LE(offset);
@@ -227,6 +301,65 @@ export function decodeMarket(buffer: Buffer): DecodedMarket {
     outcome,
     bump,
   };
+}
+
+export interface CandidateAccount {
+  pubkey: string;
+  data: Buffer;
+}
+
+export interface DiscoveryResult {
+  pubkey: string;
+  decoded: DecodedMarket;
+  source: "pinned" | "scan";
+}
+
+/** Defense-in-depth fallback selection (used only when CANONICAL_MARKET_ID
+ * is unset). Keeps only accounts with the canonical usdc_mint, decodes them
+ * (decodeMarket rejects a mismatched discriminator), and picks the max
+ * market_id among the survivors. See the module comment above decodeMarket
+ * for why this alone is not the real guarantee. */
+export function selectCanonicalMarket(
+  candidates: CandidateAccount[],
+): { pubkey: string; decoded: DecodedMarket } | null {
+  let best: { pubkey: string; decoded: DecodedMarket } | null = null;
+  for (const c of candidates) {
+    if (!hasCanonicalMint(c.data)) continue;
+    let d: DecodedMarket;
+    try {
+      d = decodeMarket(c.data);
+    } catch {
+      continue;
+    }
+    if (!best || BigInt(d.marketId) > BigInt(best.decoded.marketId)) {
+      best = { pubkey: c.pubkey, decoded: d };
+    }
+  }
+  return best;
+}
+
+/** The discovery decision for the GET /api/market route's no-`id` branch.
+ * Pinned mode (canonicalMarketId !== null) consults ONLY the pre-fetched
+ * account at marketPda(canonicalMarketId) -- scanCandidates is never looked
+ * at, so an attacker's market can never win regardless of its market_id or
+ * usdc_mint. Scan mode (canonicalMarketId === null, local dev only) falls
+ * back to selectCanonicalMarket. */
+export function resolveDiscoveredMarket(
+  canonicalMarketId: bigint | null,
+  pinnedAccount: CandidateAccount | null,
+  scanCandidates: CandidateAccount[],
+): DiscoveryResult | null {
+  if (canonicalMarketId !== null) {
+    if (!pinnedAccount) return null;
+    return {
+      pubkey: pinnedAccount.pubkey,
+      decoded: decodeMarket(pinnedAccount.data),
+      source: "pinned",
+    };
+  }
+  const best = selectCanonicalMarket(scanCandidates);
+  if (!best) return null;
+  return { pubkey: best.pubkey, decoded: best.decoded, source: "scan" };
 }
 
 // ── Predicate → human string renderer ───────────────────────────────────────
