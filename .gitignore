@@ -27,3 +27,5 @@ docs/m6-video/*.mp4
 docs/m6-video/*.mp4.lock
 dashboard/tsconfig.tsbuildinfo
 docs/FORM-ANSWERS.md
+AGENTS.md
+codex-audit-report.md
