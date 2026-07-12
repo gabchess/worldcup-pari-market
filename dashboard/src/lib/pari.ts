@@ -17,6 +17,16 @@ export const PARI_MARKET_PROGRAM_ID =
 
 const MARKET_SEED = Buffer.from("market");
 
+// ── Shared program-account constants (Kent fix-first, S194 continuation) ──
+// Hoisted here (rather than re-declared in instructions.ts) so both
+// lib/pari.ts's decode helpers and lib/instructions.ts's instruction
+// builders read the same single source for these well-known Solana program
+// IDs. String form (not wrapped in PublicKey) to keep this file's existing
+// zero-@solana/web3.js-dependency pattern; instructions.ts wraps them.
+export const SPL_TOKEN_PROGRAM_ID =
+  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+export const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
+
 // ── Instruction discriminators (copied verbatim from client/pari-client.ts
 //    IX_DISCRIMINATOR; re-copy both files together if the program is rebuilt
 //    with a renamed instruction) ───────────────────────────────────────────
@@ -178,6 +188,15 @@ export const USDC_MINT_OFFSET = 58;
  * Market struct. Verified against programs/pari-market/src/market/state.rs
  * (struct Market) via sha256; matches exactly. */
 export const MARKET_DISCRIMINATOR = [219, 190, 213, 55, 0, 227, 198, 154];
+
+/** Position account size in bytes (T3 preflight, S194 continuation) --
+ * mirrors programs/pari-market/src/position/state.rs's Position::SIZE
+ * exactly (discriminator 8 + market 32 + bettor 32 + side 1 + amount 8 +
+ * claimed 1 + bump 1, padded to 88). deposit()'s Position account is
+ * `init_if_needed`, so a bettor's first deposit on a market must pay this
+ * account's rent-exemption in addition to the base tx fee -- the deposit
+ * preflight uses this to compute the minimum SOL required. */
+export const POSITION_ACCOUNT_SIZE = 88;
 
 /** Parse the CANONICAL_MARKET_ID env var. Unset/blank -> null (fallback scan
  * mode, local dev only). Set -> the pinned market_id as a bigint. */

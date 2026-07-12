@@ -43,7 +43,7 @@ Every step below is a real devnet transaction, independently re-confirmed, not a
   - `lock_market`: [`4D9ne8omv...`](https://explorer.solana.com/tx/4D9ne8omvokBGjrf88W76pvgYeRrd3GtiXfaaq57WJLbw5VES8o2Mwsj7yF2Qh6CYJaB1GJrhuJXqAH77dvBxtxJ?cluster=devnet)
   - `resolve` (the `validate_stat` CPI, 197,678 compute units): [`yG6afD4xu...`](https://explorer.solana.com/tx/yG6afD4xuxxT53wkicFzUX7zkpxStJNHk5Jqrxe9NW1U6BssATHdeM3uHnz4ng7RopHM83pZ8oZxKqSiC1NA6Qb?cluster=devnet)
   - `claim_payout`: [`2sK4XASuB...`](https://explorer.solana.com/tx/2sK4XASuB121JKgvyeU69xVPHar6JLRbUx2zHx2R2Hyqc7acq5jyhEmpkS5scHrkbwJK78NQDjS4xWRY4wVGscJ4?cluster=devnet)
-- **35 program tests green** (`cargo test -p pari-market`), including a parametric two-stat market resolving live against the real `txoracle` program, and 10 adversarial hypotheses (fund conservation under extreme deposit sizes, cross-market and cross-position attacks, CPI trust-boundary spoofing) tried and rejected.
+- **39 program tests green** (`cargo test -p pari-market`), including a parametric two-stat market resolving live against the real `txoracle` program, and 10 adversarial hypotheses (fund conservation under extreme deposit sizes, cross-market and cross-position attacks, CPI trust-boundary spoofing) tried and rejected.
 - **Live dashboard** reads the actual Market account off devnet on every load. No mocked data: pool ratio and resolution receipt come straight from chain state.
 
 ## Honesty Notes

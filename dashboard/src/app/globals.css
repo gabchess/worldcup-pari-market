@@ -18,11 +18,12 @@
   --border:          oklch(0.89 0.016 82.8);    /* #e0dacf hairline */
 
   /* Accents */
-  --terracotta:      oklch(0.617 0.138 39);     /* #c96442 hero Net P&L value ONLY */
-  --terracotta-deep: oklch(0.471 0.11 49.3);    /* #8b4518 loss state */
+  --terracotta:      oklch(0.617 0.138 39);     /* #c96442 hero Net P&L value; loss state; primary-action hover tint (never a standalone AA text/fill pairing -- 3.9:1 vs white, sub-AA) */
+  --terracotta-deep: oklch(0.471 0.11 49.3);    /* #8b4518 primary-action fill (tx-button bg) + focus-ring color -- 7.09:1 vs white text, 6.63:1 vs ivory panel, both AA-clear */
   --sage:            oklch(0.527 0.04 152.5);   /* #5a7260 gain state + live-badge text */
   --sage-soft-bg:    oklch(0.933 0.01 155.1);   /* #e4ebe6 live-badge background */
   --fresco-ochre:    oklch(0.738 0.075 78.6);   /* #c4a574 diamond dividers + trace left-border */
+  --fresco-ochre-soft-bg: oklch(0.933 0.014 78.6); /* low-chroma tint of --fresco-ochre, same derivation recipe as --sage-soft-bg -- NO-toggle active bg, ties to .ratio-bar-no's fresco-ochre segment */
   --fresco-red:      oklch(0.533 0.118 21.9);   /* #a64d4d reserved */
   --aegean:          oklch(0.861 0.02 230.7);   /* #c5d4dc reserved */
 
@@ -182,6 +183,139 @@ a:hover {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   color: var(--ink-muted);
+}
+
+/* ─── Audited badge (E1) -- same pill language as .pill-devnet, but a real
+ * link, so it needs its own hover/underline handling (the global `a`
+ * rule adds an underline on hover that would break the pill look). ────── */
+.pill-audited {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.pill-audited:hover {
+  text-decoration: none;
+  border-color: var(--ink-muted);
+}
+
+/* ─── Wallet pill (T1 remainder) ──────────────────────────────────────────── */
+/* Reskins @solana/wallet-adapter-react-ui's <WalletMultiButton /> to match
+ * .pill-devnet's look. The library ignores a className prop on this
+ * component (it hardcodes "wallet-adapter-button-trigger" internally), so
+ * this is a descendant-selector override on the wrapping span instead. */
+.wallet-pill-wrap .wallet-adapter-button {
+  height: auto;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-family: var(--font-body); /* mono only when showing a truncated pubkey, see .wallet-pill-connected below (C4) */
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  /* 1.6 (not 1.4) so the rendered height matches .pill-devnet's ~29.2px
+   * (8px padding + 1.6*12px inherited line-height + 2px border) -- 1.4 was
+   * 2.4px short, the header-row height mismatch Chris flagged (C5). */
+  line-height: 1.6;
+  transition: none;
+}
+
+/* Connected state only (truncated pubkey shown) -- .num's numeric-display
+ * convention, not the default "Select Wallet" label (C4). */
+.wallet-pill-wrap.wallet-pill-connected .wallet-adapter-button {
+  font-family: var(--font-mono);
+}
+
+.wallet-pill-wrap .wallet-adapter-button:not([disabled]):hover {
+  background: var(--ivory);
+  border-color: var(--ink-muted);
+}
+
+.wallet-pill-wrap .wallet-adapter-button-start-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+
+/* ─── Wallet modal + dropdown (A1 remediation, Dieter TASTE_BLOCKED) ───────
+ * WalletModal/WalletModalProvider portal to document.body, outside
+ * .wallet-pill-wrap, so the library's dark default theme (#10141f wrapper,
+ * #2c2d30 dropdown) never reaches the descendant-selector override above.
+ * These target the library's own modal/dropdown classes directly -- same
+ * technique, different mount point. */
+.wallet-adapter-modal,
+.wallet-adapter-modal-overlay {
+  /* parchment-tinted scrim (site's own ink token) instead of the library's
+   * flat black rgba(0,0,0,0.5). */
+  background: oklch(0.283 0.007 67.5 / 0.45);
+}
+
+.wallet-adapter-modal-wrapper {
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  /* radius left as the library default (10px) per brief. */
+}
+
+.wallet-adapter-modal-title {
+  /* Deliberate override -- was previously inheriting Cinzel via the bare
+   * `h1 { font-family: var(--font-display); }` rule below, an accidental
+   * cascade leak, not a chosen style. */
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button,
+.wallet-adapter-dropdown-list-item {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--ivory);
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:not([disabled]):hover,
+.wallet-adapter-dropdown-list-item:not([disabled]):hover {
+  /* ivory -> parchment shift, mirrors .tx-button/.pill-chip-toggle hover */
+  background-color: var(--parchment);
+}
+
+.wallet-adapter-modal-button-close {
+  background: var(--ivory);
+  border: 1px solid var(--border);
+}
+
+.wallet-adapter-modal-button-close svg {
+  fill: var(--ink-muted);
+}
+
+.wallet-adapter-modal-button-close:hover svg {
+  fill: var(--ink);
+}
+
+.wallet-adapter-dropdown-list {
+  background: var(--ivory);
+  border: 1px solid var(--border);
+}
+
+/* Dormant under the current wallet config (Phantom + Solflare both list as
+ * "installed" -- see 04/05-wallet-modal*.png, no collapsed wallets), but the
+ * library hardcodes white text/icon here, which the A1 ivory background
+ * would otherwise make invisible if a not-installed adapter is ever added. */
+.wallet-adapter-modal-list-more,
+.wallet-adapter-modal-list-more svg {
+  color: var(--ink-muted);
+  fill: var(--ink-muted);
 }
 
 /* ─── Meander strip ───────────────────────────────────────────────────────── */
@@ -442,6 +576,123 @@ a:hover {
   color: var(--ink-muted);
   margin-top: var(--sm);
   font-style: italic;
+}
+
+/* ─── TxButton (T3/T4) ────────────────────────────────────────────────────── */
+.tx-button-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.tx-button {
+  padding: 10px 24px;
+  border-radius: 8px; /* control tier, matches .amount-input/.badge-side (was 10px) */
+  /* terracotta-deep/white measures 7.09:1 (Dieter, AA-clear); the lighter
+   * --terracotta default measured 3.9:1 and failed AA -- swapped in as the
+   * resting-state fill, not just the hover/loss shade. */
+  background: var(--terracotta-deep);
+  border: 1px solid var(--terracotta-deep);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.tx-button:hover:not(:disabled) {
+  /* Darken further rather than swap to the lighter --terracotta (that would
+   * have dropped back toward the 3.9:1 failure). Native `filter` needs no
+   * new token and can only raise the already-passing 7.09:1 ratio. */
+  filter: brightness(0.88);
+}
+
+.tx-button:disabled {
+  cursor: default;
+  /* 0.55 opacity over the ivory panel blended white-on-terracotta-deep down
+   * to 2.63:1 (measured) -- sub-AA. 0.85 measures 5.02:1, AA-clear. */
+  opacity: 0.85;
+}
+
+/* Signing/pending liveness indicator inside the button (C6) -- recolored to
+ * white since .pulse-dot/.pulse-ring default to --sage, which would clash
+ * against the terracotta-deep fill. Same @keyframes, no new vocabulary. */
+.tx-button .pulse-wrap {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.pulse-wrap-on-tx .pulse-ring,
+.pulse-wrap-on-tx .pulse-dot {
+  background: var(--white);
+}
+
+.tx-error-text {
+  color: var(--terracotta-deep);
+  margin-bottom: 0;
+}
+
+.tx-button-sig {
+  font-size: 0.75rem;
+}
+
+/* ─── Deposit / Claim panels (T3/T4) ─────────────────────────────────────── */
+.action-panel-row {
+  display: flex;
+  gap: var(--md);
+  flex-wrap: wrap;
+  margin-bottom: var(--lg);
+}
+
+/* Grouping wrapper only -- the YES/NO buttons are now .pill-chip instances
+ * (C1 consolidation, Dieter finding), each independently pill-shaped, so the
+ * wrapper just spaces them instead of also supplying a segmented-pill shape. */
+.side-toggle {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.pill-chip-toggle {
+  cursor: pointer;
+}
+
+/* active-YES keeps the existing sage pair; active-NO switches from the old
+ * neutral parchment/ink pairing to fresco-ochre/terracotta-deep so both
+ * states read as color-consistent with .ratio-bar-yes/.ratio-bar-no
+ * (Chris finding 3). */
+.pill-chip-toggle.pill-chip-active-yes {
+  background: var(--sage-soft-bg);
+  color: var(--sage);
+}
+
+.pill-chip-toggle.pill-chip-active-no {
+  background: var(--fresco-ochre-soft-bg);
+  color: var(--terracotta-deep);
+}
+
+.amount-input {
+  /* mono is deliberate here (not the .num rule's Geist-only convention) --
+   * this is the one directly-editable numeric field on the page, not a
+   * display value, so it earns its own exception. */
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--ink);
+  width: 160px;
+}
+
+.amount-input:focus {
+  /* --fresco-ochre measured 2.34:1 vs white / 2.19:1 vs ivory -- sub-3:1,
+   * fails WCAG 1.4.11 non-text contrast. --terracotta-deep clears both
+   * (7.09:1 / 6.63:1). */
+  outline: 2px solid var(--terracotta-deep);
+  outline-offset: 1px;
 }
 
 /* ─── Empty states ────────────────────────────────────────────────────────── */

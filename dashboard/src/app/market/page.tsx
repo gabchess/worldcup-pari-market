@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import {
+  explorerAddr as EXPLORER_ADDR,
+  explorerTx as EXPLORER_TX,
+} from "@/lib/explorer";
+import { DepositPanel } from "./DepositPanel";
+import { ClaimPanel } from "./ClaimPanel";
 
 const PARI_PROGRAM_ID = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3";
-const EXPLORER_ADDR = (addr: string) =>
-  `https://explorer.solana.com/address/${addr}?cluster=devnet`;
-const EXPLORER_TX = (sig: string) =>
-  `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 
 const STAT_KEY_DICTIONARY: Record<number, string> = {
   1: "home goals",
@@ -194,42 +198,72 @@ function MeanderSvg() {
   );
 }
 
+// Wallet connect/disconnect pill (T1 remainder, S194 continuation). Wraps
+// the real <WalletMultiButton /> (connect modal, dropdown, disconnect --
+// none of that is reimplemented here) but overrides its label with our own
+// truncateMiddle() once connected, since the library's own default (4/4
+// truncation) doesn't match the rest of the page's 8/8 pattern. Restyled to
+// a pill via the .wallet-pill-wrap descendant selector in globals.css --
+// WalletMultiButton always sets its OWN className internally
+// ("wallet-adapter-button-trigger"), so a className prop can't reach it;
+// wrapping is the only styling hook available.
+function WalletPill() {
+  const { publicKey } = useWallet();
+  // Mono only for the truncated pubkey; the default "Select Wallet" label
+  // stays on the page's body font (C4).
+  const className = publicKey
+    ? "wallet-pill-wrap wallet-pill-connected"
+    : "wallet-pill-wrap";
+  return (
+    <span className={className}>
+      <WalletMultiButton>
+        {publicKey ? truncateMiddle(publicKey.toBase58()) : undefined}
+      </WalletMultiButton>
+    </span>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketPage() {
   const [data, setData] = useState<MarketApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Lifted to component scope (useCallback, not just an effect-local
+  // closure) so DepositPanel/ClaimPanel can force an immediate refetch right
+  // after a deposit/claim confirms -- "new tx must appear in the
+  // Transaction Timeline within one poll cycle" means don't wait up to
+  // 2.5s for the next interval tick when we already know state changed.
+  const fetchMarket = useCallback(async () => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
     const url = id ? `/api/market?id=${encodeURIComponent(id)}` : "/api/market";
-
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const res = await fetch(url, { cache: "no-store" });
-        const json = await res.json();
-        if (cancelled) return;
-        if (!res.ok) {
-          setError(json.error ?? `HTTP ${res.status}`);
-          return;
-        }
-        setError(null);
-        setData(json as MarketApiResponse);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? `HTTP ${res.status}`);
+        return;
       }
+      setError(null);
+      setData(json as MarketApiResponse);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     }
+  }, []);
 
-    poll();
-    const interval = setInterval(poll, 2500);
+  useEffect(() => {
+    let cancelled = false;
+    const tick = () => {
+      if (!cancelled) void fetchMarket();
+    };
+    tick();
+    const interval = setInterval(tick, 2500);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [fetchMarket]);
 
   const market = data?.market ?? null;
   const status = market ? statusOf(market) : null;
@@ -271,7 +305,16 @@ export default function MarketPage() {
           >
             {truncateMiddle(PARI_PROGRAM_ID)}
           </a>
+          <a
+            href="https://github.com/gabchess/worldcup-pari-market/tree/main/docs/security"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pill-audited"
+          >
+            Audited
+          </a>
           <span className="pill-devnet">devnet</span>
+          <WalletPill />
         </div>
       </header>
 
@@ -284,7 +327,7 @@ export default function MarketPage() {
         </div>
       )}
 
-      {market && (
+      {market && data && (
         <>
           {/* Pool hero card */}
           <div className="hero-card">
@@ -348,6 +391,15 @@ export default function MarketPage() {
               devnet
             </span>
           </div>
+
+          {/* Deposit panel (T3) */}
+          <DepositPanel
+            marketAddress={data.marketAddress}
+            usdcMint={market.usdcMint}
+            lockTs={market.lockTs}
+            locked={market.locked}
+            onDeposited={fetchMarket}
+          />
 
           {/* Tx timeline panel */}
           <section
@@ -451,6 +503,36 @@ export default function MarketPage() {
                 ))}
             </section>
           )}
+
+          {/* Claim panel (T4) -- renders nothing unless the connected
+              wallet has an eligible unclaimed position. */}
+          <ClaimPanel
+            marketAddress={data.marketAddress}
+            usdcMint={market.usdcMint}
+            resolved={market.resolved}
+            outcome={market.outcome}
+            yesPool={market.yesPool}
+            noPool={market.noPool}
+            onClaimed={fetchMarket}
+          />
+
+          {/* Honest limitations (T6) -- condensed from README §Honest
+              limitations. Kept low-key at the bottom of the page. */}
+          <section className="card-panel-greek" aria-label="Honest limitations">
+            <p className="panel-title">Honest Limitations</p>
+            <p className="trace-prose">
+              Demo deposits are operator-seeded to show both pools moving --
+              there&apos;s no organic trading in this build.
+            </p>
+            <p className="trace-prose">
+              Devnet match data runs about 60 seconds behind (TxODDS&apos;s free
+              tier).
+            </p>
+            <p className="trace-prose">
+              Resolution runs off a single proof call, not a redundant
+              multi-source check.
+            </p>
+          </section>
         </>
       )}
 

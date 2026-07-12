@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Cinzel } from "next/font/google";
+import { AppWalletProvider } from "./providers";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -27,7 +28,9 @@ export default function RootLayout({
       lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable} ${cinzel.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <AppWalletProvider>{children}</AppWalletProvider>
+      </body>
     </html>
   );
 }

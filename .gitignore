@@ -29,3 +29,5 @@ dashboard/tsconfig.tsbuildinfo
 docs/FORM-ANSWERS.md
 AGENTS.md
 codex-audit-report.md
+.vercel
+codex-review.md

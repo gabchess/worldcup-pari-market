@@ -1,0 +1,24 @@
+name: dashboard-tests
+
+on:
+  push:
+    paths:
+      - "dashboard/src/lib/**"
+      - "client/pari-client.ts"
+  pull_request:
+    paths:
+      - "dashboard/src/lib/**"
+      - "client/pari-client.ts"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+        working-directory: dashboard
+      - run: npx vitest run
+        working-directory: dashboard
