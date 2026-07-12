@@ -24,8 +24,6 @@
   --sage-soft-bg:    oklch(0.933 0.01 155.1);   /* #e4ebe6 live-badge background */
   --fresco-ochre:    oklch(0.738 0.075 78.6);   /* #c4a574 diamond dividers + trace left-border */
   --fresco-ochre-soft-bg: oklch(0.933 0.014 78.6); /* low-chroma tint of --fresco-ochre, same derivation recipe as --sage-soft-bg -- NO-toggle active bg, ties to .ratio-bar-no's fresco-ochre segment */
-  --fresco-red:      oklch(0.533 0.118 21.9);   /* #a64d4d reserved */
-  --aegean:          oklch(0.861 0.02 230.7);   /* #c5d4dc reserved */
 
   /* Fonts */
   --font-display: var(--font-cinzel), Georgia, "Times New Roman", serif;
@@ -390,12 +388,6 @@ a:hover {
   color: var(--sage);
 }
 
-.hero-pp {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--ink-muted);
-  letter-spacing: 0;
-}
 
 /* Responsive: stack hero columns under 640px */
 @media (max-width: 639px) {
@@ -466,21 +458,8 @@ a:hover {
 }
 
 /* ─── Positions panel rows ────────────────────────────────────────────────── */
-.position-row {
-  padding: var(--sm) 0;
-  border-bottom: 1px solid var(--border);
-}
 
-.position-row:last-of-type {
-  border-bottom: none;
-}
 
-.position-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
 
 .field-row {
   display: flex;
@@ -508,21 +487,7 @@ a:hover {
 }
 
 /* ─── Reasoning trace panel ───────────────────────────────────────────────── */
-.trace-prob {
-  font-size: clamp(2.5rem, 2.2rem + 1.5vw, 3rem);
-  line-height: 1;
-  color: var(--ink);
-  margin-bottom: var(--sm);
-}
 
-.trace-prob-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-  margin-bottom: var(--md);
-}
 
 .trace-prose {
   font-size: 1rem;
@@ -533,18 +498,6 @@ a:hover {
   margin-bottom: var(--md);
 }
 
-.trace-assessment {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--ink-prose);
-  padding: var(--sm) var(--md);
-  background: var(--parchment);
-  border-left: 4px solid var(--fresco-ochre);
-  border-radius: 0 4px 4px 0;
-  line-height: 1.5;
-  margin-bottom: var(--sm);
-  overflow-wrap: anywhere;
-}
 
 /* ─── Tx hash links ───────────────────────────────────────────────────────── */
 .tx-hash {
