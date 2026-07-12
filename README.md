@@ -54,7 +54,8 @@ Requires Rust and Anchor 0.32.1, Node 18+, and a Solana devnet wallet.
 # Program tests (no validator needed, runs against a real dumped txoracle .so)
 cargo test -p pari-market
 
-# Dashboard (read-only live view, no wallet adapter)
+# Dashboard (connect Phantom or Solflare, deposit USDC on YES/NO, claim
+# payout -- still devnet)
 cd dashboard && npm install && npm run dev
 # -> http://localhost:3000/market
 

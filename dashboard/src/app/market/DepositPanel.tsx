@@ -10,7 +10,7 @@
  * ATA, the Position PDA) comes from the connected adapter `publicKey` --
  * nothing is cached from a prior connection.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { TxButton } from "./TxButton";
@@ -83,19 +83,29 @@ export function DepositPanel({
       ? `${publicKey.toBase58()}:${bettorUsdc.toBase58()}`
       : null;
   const [renderedBettorKey, setRenderedBettorKey] = useState(currentBettorKey);
+  // Generation counter (P1-2 fix): bumped every time the connected wallet
+  // changes. `refreshPreflight` captures the generation at entry and
+  // re-checks it after each await boundary; a mismatch means the wallet
+  // changed mid-fetch, so the resumed fetch silently abandons instead of
+  // committing a stale wallet's balances/rent numbers into the new wallet's
+  // preflight state.
+  const generationRef = useRef(0);
   if (currentBettorKey !== renderedBettorKey) {
+    generationRef.current += 1;
     setRenderedBettorKey(currentBettorKey);
     setPreflight(INITIAL_PREFLIGHT);
     setAmountInput("");
   }
 
   async function refreshPreflight(owner: PublicKey, ata: PublicKey) {
+    const generation = generationRef.current;
     setPreflight((p) => ({ ...p, loading: true }));
     const [solLamports, ataInfo, positionInfo] = await Promise.all([
       connection.getBalance(owner),
       connection.getAccountInfo(ata),
       connection.getAccountInfo(positionPda(marketPk, owner)[0]),
     ]);
+    if (generationRef.current !== generation) return;
     const ataExists = ataInfo !== null;
     const usdcBalance = ataInfo ? decodeTokenAccountAmount(ataInfo.data) : 0n;
     const rentForPosition = positionInfo
@@ -105,6 +115,7 @@ export function DepositPanel({
             POSITION_ACCOUNT_SIZE,
           ),
         );
+    if (generationRef.current !== generation) return;
     setPreflight({
       loading: false,
       solLamports: BigInt(solLamports),

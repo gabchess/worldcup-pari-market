@@ -31,3 +31,11 @@ AGENTS.md
 codex-audit-report.md
 .vercel
 codex-review.md
+
+# P2: secret-ignore hardening (codex-review-final.md)
+.env
+.env.*
+*.pem
+id.json
+*-keypair.json
+*-delegate.json
