@@ -37,7 +37,6 @@ afterAll(() => {
 });
 
 // Regression: codex-review-final.md P1-1 + P1-2
-// Report: .arcana/../codex-review-final.md (see repo root)
 //
 // P1-1 -- a confirmation-timeout retry could resend a duplicate deposit
 // (new blockhash, new signature) while the original signature might still
