@@ -13,7 +13,7 @@ Built for the TxODDS World Cup Hackathon, Prediction Markets & Settlement track.
 | Resource | Link |
 |---|---|
 | Live market | [worldcup-pari-market.vercel.app/market](https://worldcup-pari-market.vercel.app/market) |
-| Demo video | [Watch on YouTube](https://youtu.be/2Vh6RPLNd-U) |
+| Demo video | [Watch on YouTube](https://youtu.be/1HDvlMr-Fl0) |
 | Deployed program | [`565SYm...1xc3`](https://explorer.solana.com/address/565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3?cluster=devnet) |
 | Resolution transaction | [`yG6afD4x...`](https://explorer.solana.com/tx/yG6afD4xuxxT53wkicFzUX7zkpxStJNHk5Jqrxe9NW1U6BssATHdeM3uHnz4ng7RopHM83pZ8oZxKqSiC1NA6Qb?cluster=devnet) |
 | Hackathon submission | [SUBMISSION.md](SUBMISSION.md) |
