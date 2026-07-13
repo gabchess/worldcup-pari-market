@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Security headers (codex-review-final.md P2: "Missing CSP and
+  // Security headers (security review: "Missing CSP and
   // clickjacking headers"). Applied to every route.
   //
   // CSP is intentionally minimal here: only `frame-ancestors 'none'`, which

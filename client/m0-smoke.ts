@@ -5,8 +5,8 @@
  * on-chain validate_stat TRUE-predicate call against fixture 18172379, and
  * asserts the transaction succeeds with a decoded `true` return value.
  *
- * Reads the API token from ~/secrets/txline-api-token.env (never prints the
- * value). Idempotent: re-running fires a new validate_stat tx each time
+ * Reads TxLINE credentials from a server-side credential file and never
+ * prints their values. Idempotent: re-running fires a new validate_stat tx each time
  * (the underlying call has no on-chain state mutation / no double-spend risk
  * -- it's a pure verification read), so repeat runs are safe and cheap
  * (~179k CU, devnet, free).
@@ -35,7 +35,7 @@ const PROGRAM_ID = new web3.PublicKey(
 );
 const VALIDATE_STAT_DISCRIMINATOR = [107, 197, 232, 90, 191, 136, 105, 185];
 
-// Confirmed-working smoke-test fixture (M0, S175). Devnet SL=1 test data.
+// Confirmed-working smoke-test fixture. Devnet SL=1 test data.
 const FIXTURE_ID = 18172379;
 const SEQ = 1053;
 
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
 
   const { jwt, apiToken } = loadTokenEnv();
   console.log(
-    "Token loaded from ~/secrets/txline-api-token.env (value not printed)"
+    "TxLINE credentials loaded (values not printed)"
   );
 
   console.log(

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Reusable tx-sending state-machine button (T3/T4, S194 continuation).
+ * Reusable tx-sending state-machine button.
  * ONE component, shared by DepositPanel and ClaimPanel -- not a framework,
  * just idle -> signing -> pending -> confirmed | rejected | failed, plus two
  * named edge phases (expired-blockhash, timeout) called out explicitly in

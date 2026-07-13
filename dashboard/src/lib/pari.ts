@@ -17,7 +17,7 @@ export const PARI_MARKET_PROGRAM_ID =
 
 const MARKET_SEED = Buffer.from("market");
 
-// ── Shared program-account constants (Kent fix-first, S194 continuation) ──
+// ── Shared program-account constants (decoder hardening) ──
 // Hoisted here (rather than re-declared in instructions.ts) so both
 // lib/pari.ts's decode helpers and lib/instructions.ts's instruction
 // builders read the same single source for these well-known Solana program
@@ -159,8 +159,7 @@ function base58Encode(bytes: Buffer): string {
   return out;
 }
 
-// ── Canonical discovery guarantee (closes Codex audit P1 spoofing + P2
-//    decoder findings, codex-audit-report.md 2026-07-10) ───────────────────
+// ── Canonical discovery and account-decoder hardening ─────────────────────
 // The Market account carries no creator/authority field (see
 // programs/pari-market/src/market/state.rs), so discovery cannot filter by
 // "official creator" on-chain. Discovery is pinned instead: production sets
@@ -189,7 +188,7 @@ export const USDC_MINT_OFFSET = 58;
  * (struct Market) via sha256; matches exactly. */
 export const MARKET_DISCRIMINATOR = [219, 190, 213, 55, 0, 227, 198, 154];
 
-/** Position account size in bytes (T3 preflight, S194 continuation) --
+/** Position account size in bytes --
  * mirrors programs/pari-market/src/position/state.rs's Position::SIZE
  * exactly (discriminator 8 + market 32 + bettor 32 + side 1 + amount 8 +
  * claimed 1 + bump 1, padded to 88). deposit()'s Position account is
@@ -414,7 +413,7 @@ export function renderPredicate(market: DecodedMarket): string {
   return `${lhs} ${symbol} ${market.predicate.threshold}`;
 }
 
-// ── Fixture display metadata (S180-reopen addendum-1, receipt fidelity) ────
+// ── Fixture display metadata ────
 // Team names + final score are DISPLAY DATA, not on-chain state -- the
 // program only stores fixture_id + the predicate it proved (threshold,
 // comparison, resolved outcome), never the raw stat values themselves. This
@@ -423,7 +422,7 @@ export function renderPredicate(market: DecodedMarket): string {
 // "fixture reference" in the UI to keep that distinction honest -- this is
 // display metadata, not something the chain attests to. Add an entry here
 // whenever a new record-day fixture is used (see
-// video/demo-script-LOCKED-S175.md preflight primary/backup pair).
+// the recorded demo's primary and backup fixtures).
 
 interface FixtureDisplayEntry {
   label: string; // "USA vs Bosnia & Herzegovina"

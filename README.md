@@ -1,87 +1,133 @@
-# WorldCup Pari-Market
+# Pari-Market
 
-A Solana prediction market that settles by cryptographic proof instead of a vote. Deposit USDC on a side, wait for the market to lock, then anyone can trigger settlement: the program calls TxODDS's own on-chain `validate_stat` check against a Merkle root TxODDS already published, and the payout follows automatically.
+Proof-settled prediction markets on Solana.
 
-TxODDS x Solana World Cup Hackathon, Prediction Markets & Settlement track.
+Users deposit devnet USDC into a YES or NO pool. After the market locks, anyone can submit TxLINE proof material. Pari-Market CPIs into TxODDS's `validate_stat` instruction, verifies the result against TxODDS's on-chain Merkle root, and releases proportional payouts—without an admin resolution key, committee, or token vote.
 
-## Links
+Built for the TxODDS World Cup Hackathon, Prediction Markets & Settlement track.
 
-| | |
+> Devnet demonstration only. Pari-Market is not a real-money service and has not been reviewed for production or jurisdiction-specific legal compliance.
+
+## Try and verify
+
+| Resource | Link |
 |---|---|
-| Live dashboard | https://worldcup-pari-market.vercel.app |
-| Repo | https://github.com/gabchess/worldcup-pari-market |
-| Demo video | https://youtu.be/2Vh6RPLNd-U |
-| Technical docs | [docs/ENDPOINTS.md](https://github.com/gabchess/worldcup-pari-market/blob/main/docs/ENDPOINTS.md) |
+| Live market | [worldcup-pari-market.vercel.app/market](https://worldcup-pari-market.vercel.app/market) |
+| Demo video | [Watch on YouTube](https://youtu.be/2Vh6RPLNd-U) |
+| Deployed program | [`565SYm...1xc3`](https://explorer.solana.com/address/565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3?cluster=devnet) |
+| Resolution transaction | [`yG6afD4x...`](https://explorer.solana.com/tx/yG6afD4xuxxT53wkicFzUX7zkpxStJNHk5Jqrxe9NW1U6BssATHdeM3uHnz4ng7RopHM83pZ8oZxKqSiC1NA6Qb?cluster=devnet) |
+| Hackathon submission | [SUBMISSION.md](SUBMISSION.md) |
+| TxLINE integration reference | [docs/ENDPOINTS.md](docs/ENDPOINTS.md) |
+| TxLINE feedback | [docs/TXLINE-FEEDBACK.md](docs/TXLINE-FEEDBACK.md) |
 
----
+## The 30-second flow
+
+1. A creator initializes a market bound to a fixture, stat predicate, and lock time.
+2. Users deposit devnet USDC into the YES or NO pool.
+3. Once the lock time passes, anyone can lock the market.
+4. Anyone can submit TxLINE proof material to `resolve()`.
+5. `resolve()` CPIs into TxODDS `validate_stat`, which checks the proof against an on-chain Merkle root and returns true or false.
+6. Winners claim a proportional share of the combined pool. If nobody backed the winning side, everyone receives a refund.
+
+Pari-Market is a pari-mutuel pool, not an AMM or order book. The pool ratio implies the current price; users cannot trade or exit positions before settlement.
+
+## Why it matters
+
+Most prediction markets still need a person, committee, token vote, or dispute process to declare the result. Pari-Market makes resolution a deterministic program path: the market stores its predicate before deposits close, and TxODDS's on-chain program verifies the submitted match proof against a root already anchored on Solana.
+
+### Parametric markets
+
+`validate_stat` can compare one stat with a threshold or combine two stats before applying the comparison. That supports moneylines, spreads, and totals—for example, `home_goals - away_goals > 1`—through the same settlement interface.
+
+### Permissionless lifecycle
+
+No admin key decides when a market locks or resolves. Once the on-chain conditions are satisfied, any signer can call `lock_market` and `resolve`.
+
+### Verifiable receipts
+
+The dashboard reads market state from devnet and shows the transactions behind deposits, locking, resolution, and claims. The resolution receipt links to the transaction containing the TxODDS CPI.
 
 ## Architecture
 
-Three pieces, one proof call in the middle:
-
+```text
+Depositors (devnet USDC)
+          │
+          ▼
+┌──────────────────────────┐
+│ Pari-Market program      │  Market PDA stores pools,
+│ deposit / lock / resolve │  fixture, predicate, outcome
+└────────────┬─────────────┘
+             │ resolve() CPIs validate_stat
+             ▼
+┌──────────────────────────┐
+│ TxODDS txoracle program  │  Verifies proof against its
+│ validate_stat            │  daily_scores_roots PDA
+└────────────┬─────────────┘
+             │ verified true / false return data
+             ▼
+      Proportional payout
 ```
-Depositors (USDC)
-      |
-      v
-[pari-market program]  --  Market PDA: pools, predicate, fixture_id
-      |
-      | resolve() CPIs validate_stat
-      v
-[TxODDS txoracle program]  --  checks a Merkle proof against
-      |                        the daily_scores_roots root it
-      |                        already wrote on-chain
-      v
-Ok(true) or Ok(false), decoded by pari-market, payout follows
-```
 
-Depositors put USDC into a YES or NO pool before a lock time. Once locked, anyone can call `resolve()`, which fetches a proof from TxODDS's API and sends it into their `validate_stat` instruction on-chain. That instruction checks the proof against a root TxODDS itself wrote to Solana and returns true or false. The market records the result and winners claim a proportional share of the pool.
+The caller supplies proof material, but cannot replace the fixture or predicate stored in the market. Before the CPI, `resolve()` binds the supplied fixture and stat keys to the market configuration. After the CPI, it checks that TxODDS set the return data and accepts only the boolean domain `{0, 1}`.
 
-No dispute window, no committee. The oracle's own on-chain program is the judge, and the answer is re-checkable from the same public root.
+## Security model
 
-## What makes it different
+The security review focuses on the CPI trust boundary, PDA bindings, payout conservation, and adversarial account substitution. Highlights:
 
-**Parametric predicates.** `validate_stat` can check one stat against a threshold, or combine two stats with a comparison (`home_goals - away_goals > 1`, for example). That covers spreads and totals, on top of a plain "did the favorite win."
+- Payout math uses 128-bit intermediates and checked operations.
+- Floor-division dust remains in the vault, so payouts cannot exceed deposits.
+- Positions are bound to both market and bettor and cannot be claimed twice.
+- A false predicate is decoded as a valid false result, not confused with CPI failure.
+- Empty winning pools trigger refunds rather than trapped funds.
 
-**Proof-based settlement.** The resolution condition is verified by calling TxODDS's own program against a Merkle root they already published. Nobody votes, and nobody can flip it after the fact.
+See [docs/SECURITY.md](docs/SECURITY.md) for scope, trust assumptions, tests, and remaining limitations. The project has not received an independent professional audit.
 
-**Honesty disclosures, on camera.** The demo video says out loud, on screen, where the seams are: the pool deposits shown are operator-seeded to demonstrate both sides moving (not organic trading), the match data comes from TxODDS's devnet feed which runs on a 60-second delay on historical fixtures, and settlement in this demo runs off a single proof call, not a redundant multi-source check.
+## Run locally
 
-## Run it
+Requirements:
 
-Requires Rust and Anchor 0.32.1, Node 18+, and a Solana devnet wallet.
+- Rust `1.89.0`
+- Anchor CLI `0.32.1`
+- Node.js `18+`
+- A Solana devnet wallet
+- TxLINE credentials for scripts that fetch fresh proofs
 
 ```bash
-# Program tests (no validator needed, runs against a real dumped txoracle .so)
+# Rust program tests; no local validator required
 cargo test -p pari-market
 
-# Dashboard (connect Phantom or Solflare, deposit USDC on YES/NO, claim
-# payout -- still devnet)
-cd dashboard && npm install && npm run dev
-# -> http://localhost:3000/market
-
-# Full on-chain lifecycle verifier -- fires real devnet transactions
-# (create_market, deposit, lock_market, resolve, claim_payout)
-cd client && npx ts-node --project tsconfig.json ../scripts/m3-lifecycle-verify.ts
+# Dashboard
+cd dashboard
+npm install
+npm run dev
+# Open http://localhost:3000/market
 ```
 
-The lifecycle script is not a simulation. It signs and sends five real transactions against the deployed devnet program and prints each signature.
+The Rust suite runs against a checked-in dump of the real TxODDS `txoracle` program and captured TxLINE proof fixtures; the oracle is not mocked. The lifecycle verifier sends real devnet transactions and requires the environment variables documented in [docs/ENDPOINTS.md](docs/ENDPOINTS.md).
 
-## Security
+## Demo scope and trust assumptions
 
-Every trust boundary the CPI touches got a written spec before code: which fields the caller can supply, how the program checks the CPI return data actually came from TxODDS's program, and how payout math holds up under adversarial deposit sizes. That spec, an automated scan, and a 10-hypothesis adversarial pass (0 findings) live in [docs/security/](docs/security/).
+- **Historical fixture:** The demo resolves an already-finished fixture so the result and proof remain stable during judging.
+- **Delayed devnet feed:** TxODDS's devnet feed runs at service level 1 and is roughly 60 seconds behind its source.
+- **Seeded demo liquidity:** The recorded deposits are operator-seeded to make both pool sides and the ratio movement visible. The demo does not claim organic trading activity.
+- **One oracle trust anchor:** Settlement verifies one TxODDS proof against the corresponding TxODDS Merkle root on Solana. Repeating the same verification would not create independent data-source redundancy. A production design would need an explicit policy for oracle outages, incorrect roots, and independent fallback sources.
+- **Devnet PoC:** The program, dashboard, access controls, monitoring, and deployment process are not production-ready.
 
-Fund-safety highlights:
-- Payout math runs in a 128-bit intermediate, so it can't silently overflow.
-- Floor-division dust stays in the vault: total payouts can never exceed total deposits.
-- Winners can't claim on the wrong market, the wrong side, or twice.
-- If a market resolves to a side nobody backed, every depositor gets a full refund.
+## Roadmap
 
-## Honest limitations
+See [ROADMAP.md](ROADMAP.md) for proven functionality, the next engineering milestones, and longer-term product expansion.
 
-This is a hackathon build on devnet, not a production system. Specifically:
+## Repository map
 
-- **Devnet data runs about 60 seconds behind** (TxODDS's free service tier). Real-time settlement needs a paid tier or mainnet.
-- **The demo resolves against a historical, already-finished fixture**, not a live match. Deliberate: a finished match has a stable, provable result.
-- **The demo's deposits are operator-seeded** to show the pool ratio moving on both sides. No organic trading in this build; the trustless part is the on-chain resolution step, not the demo liquidity.
-- **Settlement uses a single proof call**, not a redundant multi-source check. TxODDS's Merkle root is the trust anchor, so one verified proof is sufficient by design.
-- **The dashboard's default-market lookup is pinned to `CANONICAL_MARKET_ID`** (required in production), resolved directly by PDA rather than scanning. Without that env var (local dev only), it falls back to scanning all program accounts (`getProgramAccounts`) filtered by the canonical mint. Fine at hackathon scale; would not hold up with thousands of live markets even with the pin in place.
+| Path | Purpose |
+|---|---|
+| `programs/pari-market/` | Anchor program and LiteSVM integration tests |
+| `dashboard/` | Next.js market dashboard and wallet transaction UI |
+| `client/` | TxLINE integration and instruction builders |
+| `scripts/` | Devnet lifecycle and demo verification tools |
+| `docs/` | Security, endpoint, provenance, and sponsor-feedback documentation |
+| `video/` | Source for the demo-video overlays |
+
+## Team and license
+
+Solo hackathon submission. Source code is available under the [MIT License](LICENSE).

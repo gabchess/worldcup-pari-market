@@ -1,5 +1,5 @@
 /**
- * Position account decode (T3/T4, S194 continuation) -- mirrors
+ * Position account decode -- mirrors
  * programs/pari-market/src/position/state.rs field-for-field: discriminator
  * (8) + market (32) + bettor (32) + side (1) + amount (8, u64 LE) + claimed
  * (1) + bump (1). Only the fields the deposit/claim UI actually needs are

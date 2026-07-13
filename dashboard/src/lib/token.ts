@@ -1,6 +1,6 @@
 /**
- * SPL token account helpers for the deposit/claim preflight checks (T3/T4,
- * S194 continuation). No @solana/spl-token dependency -- matches the
+ * SPL token account helpers for deposit and claim preflight checks.
+ * No @solana/spl-token dependency; matches the
  * project-wide decision recorded in client/pari-client.ts's header comment
  * (socket flagged transitive CVEs -- bigint-buffer high, uuid moderate -- on
  * @coral-xyz/anchor + @solana/spl-token for this workspace).

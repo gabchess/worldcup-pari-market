@@ -43,15 +43,15 @@ Every step below is a real devnet transaction, independently re-confirmed, not a
   - `lock_market`: [`4D9ne8omv...`](https://explorer.solana.com/tx/4D9ne8omvokBGjrf88W76pvgYeRrd3GtiXfaaq57WJLbw5VES8o2Mwsj7yF2Qh6CYJaB1GJrhuJXqAH77dvBxtxJ?cluster=devnet)
   - `resolve` (the `validate_stat` CPI, 197,678 compute units): [`yG6afD4xu...`](https://explorer.solana.com/tx/yG6afD4xuxxT53wkicFzUX7zkpxStJNHk5Jqrxe9NW1U6BssATHdeM3uHnz4ng7RopHM83pZ8oZxKqSiC1NA6Qb?cluster=devnet)
   - `claim_payout`: [`2sK4XASuB...`](https://explorer.solana.com/tx/2sK4XASuB121JKgvyeU69xVPHar6JLRbUx2zHx2R2Hyqc7acq5jyhEmpkS5scHrkbwJK78NQDjS4xWRY4wVGscJ4?cluster=devnet)
-- **39 program tests green** (`cargo test -p pari-market`), including a parametric two-stat market resolving live against the real `txoracle` program, and 10 adversarial hypotheses (fund conservation under extreme deposit sizes, cross-market and cross-position attacks, CPI trust-boundary spoofing) tried and rejected.
+- **39 Rust tests green:** 38 LiteSVM integration tests plus one program-ID unit test (`cargo test`). Coverage includes a parametric two-stat market resolving against the real dumped `txoracle` program and captured TxLINE proofs, plus 10 adversarial hypotheses covering fund conservation, cross-market and cross-position attacks, and CPI trust-boundary spoofing.
 - **Live dashboard** reads the actual Market account off devnet on every load. No mocked data: pool ratio and resolution receipt come straight from chain state.
 
-## Honesty Notes
+## Demo Scope and Trust Assumptions
 
 - The oracle's devnet feed runs on a 60-second delay (TxODDS's free service tier), and the demo settles a historical, already-finished fixture rather than a live in-progress match.
 - The pool deposits shown are operator-seeded so both sides visibly move. No organic trading in this build.
-- Settlement uses one verified proof call, not several independent checks. TxODDS's on-chain Merkle root is the trust anchor, so a single check against it is the design, not a shortcut.
-- `init_market` now validates the `stat_b_key`/`op` two-stat invariant at creation, rejecting the mismatched-Option config that could otherwise create a market with no valid resolution path. Enforced on-chain as of the S191 remediation.
+- Settlement has one oracle trust anchor: TxODDS's program and on-chain Merkle root. Repeating the same verification would not provide independent data-source redundancy.
+- This is a devnet proof of concept, not a production or real-money service. It has not received an independent professional audit or jurisdiction-specific legal review.
 
 ---
 

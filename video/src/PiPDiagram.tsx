@@ -12,7 +12,7 @@ import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 const geistFont = loadGeist();
 const geistMonoFont = loadGeistMono();
 
-// DESIGN.md tokens verbatim - no shader, no new color pairs.
+// Uses the dashboard color tokens without shader effects.
 const T = {
   ivory: "#faf7f0",
   ink: "#2c2926",

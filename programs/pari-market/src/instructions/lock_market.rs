@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 
 /// Locks a market, permanently closing the deposit window.
 ///
-/// Permissionless + time-gated: the Market struct (per LOCKED plan v2) carries
+/// Permissionless + time-gated: the Market struct (by design) carries
 /// no `authority` field, so lock_market is not admin-gated. Any signer may
 /// call it once Clock::get()?.unix_timestamp >= market.lock_ts -- matching the
 /// trustless design in docs/pm-research.md (resolution reads only from the

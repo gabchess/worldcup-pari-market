@@ -1,5 +1,5 @@
 /**
- * Field-level equivalence tests (T2, S194): assert dashboard's ported
+ * Field-level equivalence tests: assert dashboard's ported
  * instruction builders produce byte-identical instructions to
  * client/pari-client.ts's builders for the same fixed inputs -- program ID,
  * key ordering, isSigner/isWritable flags, and data bytes all compared.
@@ -87,7 +87,7 @@ describe("buildDepositInstruction vs client/pari-client.ts buildDeposit", () => 
     expectEquivalentInstruction(ported, reference);
   });
 
-  // Edge-case fixtures (Kent fix-first, S194 continuation): amount=0n (the
+  // Edge-case fixtures (decoder hardening): amount=0n (the
   // program's ZeroAmount guard rejects this on-chain, but the *encoding*
   // must still be byte-identical to the reference -- validation is the
   // caller's job, not the instruction builder's) and amount=2n**60n (well

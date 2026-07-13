@@ -1,6 +1,6 @@
 /**
  * Deposit + claim_payout instruction builders for the dashboard's wallet UI
- * (T2, S194). Ported field-for-field from client/pari-client.ts -- same
+ *. Ported field-for-field from client/pari-client.ts -- same
  * discriminators (reused, not re-derived, from lib/pari.ts's
  * IX_DISCRIMINATORS table), same account ordering, same Borsh arg encoding --
  * wrapped directly in @solana/web3.js's TransactionInstruction so T3/T4's
@@ -32,7 +32,7 @@ import {
 export const PARI_MARKET_PROGRAM_ID = new PublicKey(PARI_MARKET_PROGRAM_ID_STR);
 
 // Mirrors client/pari-client.ts's constants exactly (values now hoisted to
-// lib/pari.ts -- Kent fix-first, S194 continuation).
+// lib/pari.ts -- decoder hardening).
 const SPL_TOKEN_PROGRAM_ID = new PublicKey(SPL_TOKEN_PROGRAM_ID_STR);
 const SYSTEM_PROGRAM_ID = new PublicKey(SYSTEM_PROGRAM_ID_STR);
 

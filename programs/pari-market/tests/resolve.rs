@@ -579,7 +579,7 @@ fn test_resolve_fixture_mismatch_rejected_pre_cpi() {
 
     // Same proof data, but fixture_summary.fixture_id altered to a different
     // fixture than market.fixture_id (common::FIXTURE_ID). Must be rejected
-    // BEFORE the CPI (structural fix, Dayo P0 #1) -- no CU spent on the CPI.
+    // BEFORE the CPI, so no compute units are spent on an invalid proof.
     let mut wrong_summary = common::fixture_summary();
     wrong_summary.fixture_id = common::FIXTURE_ID + 1;
 

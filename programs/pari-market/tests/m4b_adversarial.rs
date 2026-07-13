@@ -1188,7 +1188,7 @@ fn attack_claim_payout_before_resolve_rejected_at_account_validation_layer() {
     // struct's `constraint = market.resolved @ MarketNotResolved` fires here;
     // the rejection happens before the body runs, and the error now names the
     // actual "not yet resolved" condition rather than the backwards
-    // AlreadyResolved -- Dayo M4b cosmetic fix, S179).
+    // AlreadyResolved -- adversarial-review cleanup).
     assert_eq!(err.err, custom_err(6013), "expected MarketNotResolved (6013) as the account-validation-layer guard for an unresolved market");
 
     assert_eq!(

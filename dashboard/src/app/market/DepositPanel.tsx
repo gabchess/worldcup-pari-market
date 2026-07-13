@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Deposit UI (T3, S194 continuation): amount input + YES/NO toggle +
+ * Deposit UI: amount input + YES/NO toggle +
  * <TxButton>. Preflight-checks the bettor's wallet before enabling submit so
  * a doomed transaction never reaches the wallet (the program's own guards
  * would otherwise surface as an opaque simulation failure).

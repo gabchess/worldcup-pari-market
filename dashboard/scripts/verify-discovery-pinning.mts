@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node --experimental-strip-types
 /**
- * Regression check for the Codex audit P1 finding (codex-audit-report.md):
+ * Regression check for canonical-market discovery pinning:
  * permissionless market creation + "pick max market_id" discovery let any
  * attacker create a market at market_id = u64::MAX and permanently occupy
  * the dashboard's default "latest market" view.

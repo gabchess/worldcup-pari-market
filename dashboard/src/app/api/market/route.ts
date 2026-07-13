@@ -2,7 +2,7 @@
  * M5 pari-market live view: server-side devnet RPC reads only. No caching
  * (dynamic = "force-dynamic") so every poll reflects current chain state --
  * EXCEPT for the short in-memory response cache below, which exists purely
- * to bound RPC amplification (codex-review-final.md P1), not to serve stale
+ * to bound RPC amplification (security review), not to serve stale
  * data on purpose. See "Amplification protection" for details.
  *
  * GET /api/market            -> resolve the default market: CANONICAL_MARKET_ID
@@ -13,11 +13,11 @@
  *                                pin, not the mint filter, is the guarantee
  *                                against a permissionless u64::MAX market
  *                                spoofing the "latest market" slot
- *                                (codex-audit-report.md P1).
+ *                                (security review).
  * GET /api/market?id=<id>    -> decode that specific market_id + timeline.
  *
- * Reads the Helius devnet RPC key from ~/secrets/helius-api-key.txt at point
- * of use only -- never sent to the client, never logged.
+ * Reads the Helius devnet RPC key from a server-side environment variable
+ * or local credential file. The key is never sent to the client or logged.
  */
 import { NextRequest, NextResponse } from "next/server";
 import * as fs from "fs";
@@ -94,7 +94,7 @@ class MarketApiError extends Error {
 }
 
 // ---------------------------------------------------------------------------
-// Amplification protection (codex-review-final.md P1: "Public market API can
+// Amplification protection (security review: "Public market API can
 // amplify requests into Helius quota exhaustion"). The browser polls this
 // route every 2.5s and, pre-fix, each request re-fetched up to 25
 // transactions sequentially with zero caching -- an unauthenticated caller
@@ -292,7 +292,7 @@ async function resolveMarketData(
     // Discover: CANONICAL_MARKET_ID pins the dashboard's default market to
     // an exact PDA (same derivation as the ?id= branch above) so a
     // permissionless market created at market_id = u64::MAX can never
-    // become the "latest market" (codex-audit-report.md P1). Falls back to
+    // become the "latest market" (security review). Falls back to
     // a mint-filtered scan only when unset (local dev); production MUST
     // set CANONICAL_MARKET_ID -- see docs/ENDPOINTS.md.
     const canonicalMarketId = parseCanonicalMarketId(
@@ -390,7 +390,7 @@ export async function GET(request: NextRequest) {
     // Unexpected failure (RPC error, decode failure, etc). Log full detail
     // server-side only; the client gets a stable, non-identifying message --
     // raw err.message can leak filesystem paths, RPC provider detail, or
-    // implementation internals (codex-review-final.md P2).
+    // implementation internals (security review).
     console.error("[/api/market] unexpected error:", err);
     return NextResponse.json(
       {

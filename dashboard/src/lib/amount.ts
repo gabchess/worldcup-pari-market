@@ -1,6 +1,6 @@
 /**
  * Decimal-text -> base-units bigint parsing for the deposit amount input
- * (T3, S194 continuation). Never routes through `Number` -- USDC has 6
+ *. Never routes through `Number` -- USDC has 6
  * decimals and JS's safe-integer range (2^53-1) is smaller than u64::MAX, so
  * a Number-based parse would silently lose precision on large inputs.
  */

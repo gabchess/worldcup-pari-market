@@ -6,7 +6,7 @@ import { Disclosure } from "./Disclosure";
 
 const FPS = 30;
 
-// Disclosure text VERBATIM from video/demo-script-LOCKED-S175.md.
+// Disclosure text used in the recorded demo.
 const D1_TEXT =
   "Demo deposits, operator-seeded to show both sides of the pool. Final payout math is what you'll see resolve on-chain.";
 const D2_TEXT =
@@ -28,7 +28,7 @@ export const RemotionRoot: React.FC = () => {
         height={520}
       />
 
-      {/* End card - DESIGN.md tokens, Beat 7 overlay content (program ID +
+      {/* End card with program and project links (program ID +
           repo/track line), 8s. */}
       <Composition
         id="end-card"

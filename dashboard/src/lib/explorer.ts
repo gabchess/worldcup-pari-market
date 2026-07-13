@@ -1,6 +1,6 @@
 /**
- * Solana devnet explorer link helpers. Extracted from market/page.tsx (T3,
- * S194 continuation) so <TxButton /> can link to a submitted signature
+ * Solana devnet explorer link helpers. Extracted from market/page.tsx so
+ * <TxButton /> can link to a submitted signature
  * without duplicating the URL template.
  */
 export function explorerTx(signature: string): string {

@@ -9,35 +9,35 @@ test-ledger
 .arcana
 .venv
 
-# S171 additions
+# Local build and capture artifacts
 dashboard/.claude/
 video/public/
 video/node_modules/
 video/out/
 
-# M1.5: devnet test wallet keypair files (pubkeys only in devnet-config.json)
+# Devnet test wallet keypair files
 .wallets/
 video/raw/
 video/footage/
 
-# M6 video post-production scratch + protected final (video ships via YouTube, not git)
+# Video post-production scratch; the final video ships via YouTube
 docs/m6-video/work/
-docs/m6-video/backup-m6-final-S182/
+docs/m6-video/backup-*/
 docs/m6-video/*.mp4
 docs/m6-video/*.mp4.lock
 dashboard/tsconfig.tsbuildinfo
 docs/FORM-ANSWERS.md
 AGENTS.md
-codex-audit-report.md
+*-audit-report.md
 .vercel
-codex-review.md
+*-review.md
 
-# P2: secret-ignore hardening (codex-review-final.md)
+# Credentials and local review artifacts
 .env
 .env.*
 *.pem
 id.json
 *-keypair.json
 *-delegate.json
-codex-review-final.md
+*-review-final.md
 .claude/

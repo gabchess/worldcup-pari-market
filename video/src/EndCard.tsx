@@ -14,7 +14,7 @@ const cinzelFont = loadCinzel();
 const geistFont = loadGeist();
 const geistMonoFont = loadGeistMono();
 
-// DESIGN.md tokens verbatim.
+// Uses the dashboard color tokens.
 const T = {
   parchment: "#f0ebe3",
   ivory: "#faf7f0",

@@ -690,7 +690,7 @@ fn test_deposit_wrong_mint_rejected() {
     assert!(result.is_err(), "deposit with wrong-mint token account should be rejected by Anchor's token::mint constraint");
 }
 
-// ── Test 6: side-mismatch on repeat deposit rejected (Dayo M4a P1 finding) ──
+// ── Test 6: side-mismatch on repeat deposit rejected (security review finding) ──
 
 #[test]
 fn test_deposit_side_mismatch_on_repeat_rejected() {

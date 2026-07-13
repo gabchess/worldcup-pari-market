@@ -244,7 +244,7 @@ a:hover {
   margin-right: 6px;
 }
 
-/* ─── Wallet modal + dropdown (A1 remediation, Dieter TASTE_BLOCKED) ───────
+/* ─── Wallet modal + dropdown (accessibility remediation) ───────
  * WalletModal/WalletModalProvider portal to document.body, outside
  * .wallet-pill-wrap, so the library's dark default theme (#10141f wrapper,
  * #2c2d30 dropdown) never reaches the descendant-selector override above.
@@ -542,7 +542,7 @@ a:hover {
 .tx-button {
   padding: 10px 24px;
   border-radius: 8px; /* control tier, matches .amount-input/.badge-side (was 10px) */
-  /* terracotta-deep/white measures 7.09:1 (Dieter, AA-clear); the lighter
+  /* terracotta-deep/white measures 7.09:1, meeting WCAG AA contrast; the lighter
    * --terracotta default measured 3.9:1 and failed AA -- swapped in as the
    * resting-state fill, not just the hover/loss shade. */
   background: var(--terracotta-deep);
@@ -600,7 +600,7 @@ a:hover {
 }
 
 /* Grouping wrapper only -- the YES/NO buttons are now .pill-chip instances
- * (C1 consolidation, Dieter finding), each independently pill-shaped, so the
+ * (style consolidation), each independently pill-shaped, so the
  * wrapper just spaces them instead of also supplying a segmented-pill shape. */
 .side-toggle {
   display: inline-flex;
@@ -661,7 +661,7 @@ a:hover {
   font-size: 0.875rem;
 }
 
-/* ─── M5 — Pari-Market Live view (S180 delta) ────────────────────────────── */
+/* ─── M5 — Pari-Market Live view ────────────────────────────── */
 
 /* Status badge: LOCKED / RESOLVED variants (OPEN reuses .badge-live) */
 .status-badge {

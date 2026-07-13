@@ -1,5 +1,5 @@
 /// Integration tests for pari-market M2b: claim_payout() -- proportional
-/// payout math, the winner-only declarative constraint (Dayo M4a P1), the
+/// payout math, the winner-only declarative constraint (security review), the
 /// empty-winning-pool refund edge case, the vault-PDA-signed transfer-out
 /// authority path (first runtime exercise), and the conservation fuzz test
 /// (the M2b verifier).

@@ -1,6 +1,6 @@
 /**
- * Program-error -> friendly-message translation for <TxButton> (T3/T4, S194
- * continuation). Matches by Anchor's error variant NAME first (the string
+ * Program-error -> friendly-message translation for <TxButton>. Matches by
+ * Anchor's error variant name first (the string
  * Anchor prints in program logs as "Error Code: <Name>"), falling back to
  * the program's own #[msg("...")] text when present in the logs, and
  * finally to the raw error message.
@@ -8,7 +8,7 @@
  * Variant list + numbering mirrors programs/pari-market/src/errors.rs
  * exactly (base 6000 + declaration order); only the variants this dashboard
  * can actually surface (deposit + claim_payout paths) get a friendly
- * override here -- resolve()/init_market() variants are Bram/deployer-side,
+ * override here; resolve()/init_market() variants are operator-side,
  * never user-facing in this UI.
  */
 

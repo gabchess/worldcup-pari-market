@@ -19,13 +19,13 @@ use anchor_spl::token::{self, Transfer};
 /// same-slot lock-race case -- a deposit landing at/after lock_ts must fail
 /// even if lock_market() itself hasn't been called yet).
 ///
-/// Reinit-guard (M4a audit, Dayo, S175): `position` is `init_if_needed`, so a
+/// Reinit-guard (security review): `position` is `init_if_needed`, so a
 /// repeat deposit reuses the same PDA instead of re-initializing. Only
 /// `amount` mutates on a repeat call (via checked_add) -- `market`, `bettor`,
 /// and `claimed` are never re-written, so a stale `claimed = true` can never
 /// be reset back to `false` by a later deposit.
 ///
-/// Side-consistency guard (M4a audit, Dayo, S175 -- Position PDA is seeded
+/// Side-consistency guard (security review -- Position PDA is seeded
 /// [market, bettor] with no `side` component): a repeat deposit whose `side`
 /// arg disagrees with the side already recorded on an existing position is
 /// rejected outright with SideMismatch, never silently ignored.

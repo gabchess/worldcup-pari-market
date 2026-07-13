@@ -97,7 +97,7 @@ function renderPredicate(market: DecodedMarket): string {
   return `${lhs} ${symbol} ${market.predicate.threshold}`;
 }
 
-// Fixture display metadata (S180-reopen addendum-1, receipt fidelity). Team
+// Fixture display metadata. Team
 // names + final score are DISPLAY DATA, not on-chain state -- the program
 // only stores fixture_id + the predicate it proved, never raw stat values.
 // Copy, not shared import, matching this file's self-contained pattern (see
@@ -198,7 +198,7 @@ function MeanderSvg() {
   );
 }
 
-// Wallet connect/disconnect pill (T1 remainder, S194 continuation). Wraps
+// Wallet connect/disconnect pill. Wraps
 // the real <WalletMultiButton /> (connect modal, dropdown, disconnect --
 // none of that is reimplemented here) but overrides its label with our own
 // truncateMiddle() once connected, since the library's own default (4/4

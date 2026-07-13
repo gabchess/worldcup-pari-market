@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Wallet-adapter scaffold (T1, S194). Wraps the app in ConnectionProvider +
+ * Wallet-adapter scaffold. Wraps the app in ConnectionProvider +
  * WalletProvider + WalletModalProvider so market/page.tsx can render
  * <WalletMultiButton /> and any future T3/T4 <TxButton /> can call
  * useWallet()/useConnection(). No tx-signing logic here -- connect only,
@@ -21,10 +21,9 @@ import { clusterApiUrl } from "@solana/web3.js";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-/** Public devnet cluster RPC -- deliberately NOT the Helius key
- * api/market/route.ts uses server-side (that key is read from
- * ~/secrets/helius-api-key.txt "never sent to the client, never logged").
- * Wallet-signed deposit/claim transactions (T3/T4) only need a devnet RPC to
+/** Public devnet cluster RPC, deliberately separate from the Helius key used
+ * server-side by api/market/route.ts. That key is never sent to the client
+ * or logged. Wallet-signed deposit and claim transactions only need a devnet RPC to
  * submit against; a paid Helius key has no reason to ship in the client
  * bundle just to satisfy that. */
 const DEVNET_ENDPOINT = clusterApiUrl("devnet");

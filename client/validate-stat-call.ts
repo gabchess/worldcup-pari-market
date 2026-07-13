@@ -92,7 +92,7 @@ async function fetchProof(
   const apiToken = process.env["TXLINE_API_TOKEN"];
   if (!jwt || !apiToken) {
     throw new Error(
-      "TXLINE_JWT / TXLINE_API_TOKEN not set (source ~/secrets/txline-api-token.env)"
+      "TXLINE_JWT / TXLINE_API_TOKEN not set (set TXLINE_JWT and TXLINE_API_TOKEN)"
     );
   }
   const qs = new URLSearchParams({

@@ -11,7 +11,7 @@ use anchor_lang::prelude::*;
 /// instruction against the market's stored predicate/stat_a_key/stat_b_key/op,
 /// then recording the outcome.
 ///
-/// ── M2a structural fix (Dayo M4a P0 #1) ─────────────────────────────────────
+/// ── Pre-CPI trust-boundary guard ─────────────────────────────────────
 ///
 /// The caller supplies ONLY proof material: `ts`, `fixture_summary`,
 /// `fixture_proof`, `main_tree_proof`, `stat_a`, `stat_b`. The predicate

@@ -406,7 +406,7 @@ export interface ResolveAccounts {
   caller: PublicKey;
 }
 
-/** Caller supplies ONLY proof material (Dayo M4a P0 #1 structural fix,
+/** Caller supplies ONLY proof material (pre-CPI trust-boundary requirement,
  * enforced on-chain in resolve()'s body): predicate/stat_a_key/stat_b_key/op
  * are read from market state, never passed here. daily_scores_merkle_roots
  * is derived cross-program under TXORACLE_PROGRAM_ID from epochDay. */

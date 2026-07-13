@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Claim UI (T4, S194 continuation): reuses <TxButton>. Renders nothing
+ * Claim UI: reuses <TxButton>. Renders nothing
  * unless the connected wallet has an eligible position -- a losing position
  * (story 10) or an already-claimed one simply shows no control at all.
  *

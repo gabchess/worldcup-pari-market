@@ -87,7 +87,7 @@ fn encode_validate_stat_args(
 
 /// Invokes the CPI, then decodes + domain-checks the return data.
 ///
-/// Dayo M4a P0 #2 (post-CPI trust boundary): `get_return_data()` reads a
+/// post-CPI trust-boundary review (post-CPI trust boundary): `get_return_data()` reads a
 /// single global buffer set by whichever program last called
 /// `set_return_data`. Trusting its contents without first confirming the
 /// returning `program_id == TXORACLE_PROGRAM_ID` is the load-bearing check --

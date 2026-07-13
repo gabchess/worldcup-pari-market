@@ -11,7 +11,7 @@
  * first stdout line so a driving script/operator can capture it immediately
  * and poll /api/market?id=<MARKET_ID> while this script runs.
  *
- * Cadence params (S180-reopen, addendum-1) -- env overrides, all optional:
+ * Cadence parameters; environment overrides are optional:
  *   N_DEPOSITS               default 6      -- number of alternating deposits
  *   DEPOSIT_SLEEP_MS_MIN     default 6000   -- min sleep between deposits (ms)
  *   DEPOSIT_SLEEP_MS_MAX     default 10000  -- max sleep between deposits (ms)
@@ -29,12 +29,12 @@
  * AUTHOR ONLY -- DO NOT RUN (outside PRINT_PLAN=1 dry mode). This dispatch is
  * read-only RPC + build; firing this script for real executes
  * (3 + N_DEPOSITS) devnet value transactions (1 create + N deposits + 1 lock
- * + 1 resolve + 1 claim), which is a GABE_GATE / Garry-main-thread-only
+ * + 1 resolve + 1 claim), which requires an authorized operator
  * action per the Layer-0 constraint for this session.
  *
  * Reads secrets at point-of-use only (never logs values):
- *   - ~/secrets/helius-api-key.txt        (devnet RPC)
- *   - ~/secrets/txline-api-token.env      (TXLINE_JWT + TXLINE_API_TOKEN)
+ *   - HELIUS_API_KEY        (devnet RPC)
+ *   - TXLINE_JWT and TXLINE_API_TOKEN      (TXLINE_JWT + TXLINE_API_TOKEN)
  *   - ~/.config/solana/id.json            (deployer / market authority)
  *   - .wallets/test-wallet-{1,2}.json     (bettors, gitignored dir)
  *
@@ -284,7 +284,7 @@ function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// ── Cadence params (env overrides, S180-reopen addendum-1) ────────────────
+// ── Cadence parameters (environment overrides) ────────────────────────────
 
 interface CadencePlan {
   nDeposits: number;

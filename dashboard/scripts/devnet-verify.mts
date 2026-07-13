@@ -1,7 +1,6 @@
 #!/usr/bin/env -S node --experimental-strip-types
 /**
- * Devnet instruction proof for T3/T4 (S194 continuation, Bram dispatch
- * OUTPUT_CONTRACT verifier 3): a FRESH market lifecycle where the deposit
+ * Devnet instruction proof for a fresh market lifecycle where the deposit
  * and claim_payout instructions are built by dashboard/src/lib/instructions.ts
  * (buildDepositInstruction / buildClaimPayoutInstruction) -- proving the
  * dashboard's own instruction builders, not just their field-level
@@ -11,7 +10,7 @@
  * Copies the scripts/m3-lifecycle-verify.ts pattern (create_market ->
  * deposit -> lock_market -> resolve -> claim_payout, idempotent-by-
  * construction via Date.now()-derived market_id) into dashboard/scripts/
- * per the dispatch brief. init_market/lock_market/resolve are re-derived
+ * `init_market`, `lock_market`, and `resolve` are re-derived
  * locally rather than imported from client/pari-client.ts at runtime,
  * for two reasons: (1) FRONTEND-ONLY scope forbids depending on or editing
  * anything under client/, and (2) client/node_modules doesn't exist in this

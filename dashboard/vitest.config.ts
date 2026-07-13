@@ -10,7 +10,7 @@ import { defineConfig } from "vitest/config";
 // affect `next build` or any runtime bundle.
 //
 // `react()` (added for TxButton/DepositPanel regression tests,
-// codex-review-final.md P1 fixes) enables JSX/TSX transform for component
+// security review fixes) enables JSX/TSX transform for component
 // tests. The jsdom environment itself is NOT set globally here -- it's
 // opted into per-file via a `// @vitest-environment jsdom` pragma in
 // TxButton.test.tsx/DepositPanel.test.tsx only. A global jsdom environment

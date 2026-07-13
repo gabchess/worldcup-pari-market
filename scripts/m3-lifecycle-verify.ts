@@ -8,8 +8,8 @@
  * of PDAs -- no collision with a prior run, safely re-runnable.
  *
  * Reads secrets at point-of-use only (never logs values):
- *   - ~/secrets/helius-api-key.txt        (devnet RPC)
- *   - ~/secrets/txline-api-token.env      (TXLINE_JWT + TXLINE_API_TOKEN)
+ *   - HELIUS_API_KEY        (devnet RPC)
+ *   - TXLINE_JWT and TXLINE_API_TOKEN      (TXLINE_JWT + TXLINE_API_TOKEN)
  *   - ~/.config/solana/id.json            (deployer / market authority)
  *   - .wallets/test-wallet-{1,2}.json     (bettors, gitignored dir)
  *
@@ -336,7 +336,7 @@ async function main(): Promise<void> {
   // lock_ts far enough in the future that both deposits land before lock
   // even under slow devnet confirmation, then lock_market runs after a
   // short wait. 30s observed comfortable headroom over the ~6s this took in
-  // the S179 dry run; widened here (not tuned to that one run) since a
+  // the initial dry run; widened here (not tuned to one run) since a
   // fresh re-run under congestion could otherwise race DepositAfterLock.
   const nowSec = Math.floor(Date.now() / 1000);
   const lockTs = BigInt(nowSec + 30);

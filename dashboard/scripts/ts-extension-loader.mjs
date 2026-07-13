@@ -1,5 +1,5 @@
-// Minimal Node ESM resolve hook (devnet-verify.mts support only, S194
-// continuation). dashboard/src/lib/*.ts uses extensionless relative imports
+// Minimal Node ESM resolve hook for devnet-verify.mts.
+// dashboard/src/lib/*.ts uses extensionless relative imports
 // (e.g. `from "./pari"`) -- correct for tsconfig's "moduleResolution":
 // "bundler" (what Next.js/webpack/vitest already use, and what next build's
 // own tsc already type-checks against), but Node's native ESM loader

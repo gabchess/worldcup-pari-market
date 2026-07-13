@@ -13,7 +13,7 @@ import { findAssociatedTokenAddress } from "@/lib/token";
 // rebinds Buffer's prototype chain before any PDA derivation runs.
 Object.setPrototypeOf(Buffer.prototype, Uint8Array.prototype);
 
-// Regression: codex-review-final.md P1-2 -- "In-flight wallet work can
+// Regression: wallet-state review -- "In-flight wallet work can
 // overwrite state after a Phantom account switch". This test targets
 // `refreshPreflight`'s own vulnerability (separate from TxButton.test.tsx,
 // which covers the same class of bug in TxButton.run()/checkStatus()).

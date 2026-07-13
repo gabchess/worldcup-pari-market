@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 /// A single node in a portable Merkle proof path.
 ///
-/// S171/M0 reuse: mirrors the txoracle IDL `ProofNode` struct byte-for-byte
+/// Compatibility requirement: mirrors the txoracle IDL `ProofNode` struct byte-for-byte
 /// (see client/validate-stat-borsh.ts ProofNode, confirmed working in M0's
 /// live validate_stat calls). Reused here as the client-side Merkle-verify
 /// fallback type (see docs/pm-research.md Part 5 "Mechanism (fallback)") --

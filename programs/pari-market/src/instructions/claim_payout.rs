@@ -138,13 +138,13 @@ pub struct ClaimPayout<'info> {
         has_one = market,
         has_one = bettor,
         constraint = !position.claimed @ PariMarketError::AlreadyClaimed,
-        // Winner-only claim (Dayo M4a P1), OR'd with the empty-winning-pool
+        // Winner-only claim (security review), OR'd with the empty-winning-pool
         // refund path: a position may claim if (a) its side matches the
         // resolved outcome (ordinary winner), or (b) the pool matching the
         // resolved outcome is empty (nobody backed the winner -- every
         // position, any side, refunds its own deposit; see claim_payout's
         // doc comment for the full rationale). Fails cheap, before any CU is
-        // spent on payout math, matching Dayo's spec recommendation to
+        // spent on payout math, matching the trust-boundary requirement to
         // express this at the Accounts-struct level rather than an in-body
         // require!.
         constraint = (
