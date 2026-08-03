@@ -194,7 +194,6 @@ function MeanderSvg() {
       className="meander-strip"
       xmlns="http://www.w3.org/2000/svg"
       height="8"
-      preserveAspectRatio="xMidYMid repeat"
       aria-hidden="true"
     >
       <defs>
