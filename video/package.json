@@ -1,7 +1,7 @@
 {
   "name": "worldcup-txodds-demo",
   "version": "1.0.0",
-  "description": "World Cup TxODDS hackathon demo video",
+  "description": "World Cup TxODDS proof demo video",
   "scripts": {
     "build": "remotion render",
     "render": "remotion render demo",

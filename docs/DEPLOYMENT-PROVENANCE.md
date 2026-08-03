@@ -25,6 +25,6 @@ This repository does not claim byte-for-byte reproducible builds. That work rema
 
 ## Behavioral evidence
 
-The deployed program completed the full market lifecycle on devnet: initialization, deposits on both sides, lock, TxODDS `validate_stat` CPI resolution, and payout. The finalized transaction links appear in [SUBMISSION.md](../SUBMISSION.md).
+The deployed program completed the full market lifecycle on devnet: initialization, deposits on both sides, lock, TxODDS `validate_stat` CPI resolution, and payout. The finalized transaction links appear in [PROJECT-OVERVIEW.md](../PROJECT-OVERVIEW.md).
 
 Behavioral verification and deployment timing reduce ambiguity; they do not replace a pinned verifiable-build pipeline.

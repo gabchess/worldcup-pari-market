@@ -1,6 +1,6 @@
 # TxLINE API Feedback: Devnet Integration Notes
 
-These are notes from building a World Cup settlement system on devnet during the hackathon. The API works well once you know the right call shapes. Each item below is a place where I lost time and a suggested doc fix that would save the next builder that time.
+These are notes from building a World Cup settlement system on devnet. The API works well once you know the right call shapes. Each item below is a place where I lost time and a suggested doc fix that would save the next builder that time.
 
 ---
 

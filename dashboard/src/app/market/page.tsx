@@ -125,6 +125,27 @@ function renderFixtureReference(market: DecodedMarket): string {
   return `${entry.label} · ${entry.homeGoals}–${entry.awayGoals}`;
 }
 
+/** Human-readable fixture name without revealing the final score pre-resolve. */
+function renderFixtureLabel(market: DecodedMarket): string {
+  return FIXTURE_DISPLAY[market.fixtureId]?.label ?? `fixture ${market.fixtureId}`;
+}
+
+/** Plain-language question for the common home-goals-minus-away-goals market. */
+function renderMarketQuestion(market: DecodedMarket): string {
+  if (
+    market.statAKey === 1 &&
+    market.statBKey === 2 &&
+    market.op === "Subtract" &&
+    market.predicate.comparison === "GreaterThan"
+  ) {
+    const margin = market.predicate.threshold;
+    return `Will the home team win by more than ${margin} goal${
+      margin === 1 ? "" : "s"
+    }?`;
+  }
+  return `Will ${renderPredicate(market)}?`;
+}
+
 /** Proved stat values + predicate evaluation, e.g. "home goals 2 − away
  * goals 0 = 2 > 1 → TRUE". Returns null pre-resolve or when the fixture has
  * no display entry (no stat values to show without fabricating a number). */
@@ -306,12 +327,12 @@ export default function MarketPage() {
             {truncateMiddle(PARI_PROGRAM_ID)}
           </a>
           <a
-            href="https://github.com/gabchess/worldcup-pari-market/tree/main/docs/security"
+            href="https://github.com/gabchess/worldcup-pari-market/blob/main/docs/SECURITY.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="pill-audited"
+            className="pill-security"
           >
-            Audited
+            Security notes
           </a>
           <span className="pill-devnet">devnet</span>
           <WalletPill />
@@ -329,6 +350,13 @@ export default function MarketPage() {
 
       {market && data && (
         <>
+          <section className="market-context" aria-label="Market question">
+            <p className="market-context-kicker">Market question</p>
+            <h2>{renderFixtureLabel(market)}</h2>
+            <p className="market-context-question">{renderMarketQuestion(market)}</p>
+            <p className="market-context-flow">Deposit → lock → proof → claim</p>
+          </section>
+
           {/* Pool hero card */}
           <div className="hero-card">
             <div className="hero-grid">
@@ -376,7 +404,7 @@ export default function MarketPage() {
           {/* Pill facts row */}
           <div className="pill-row" role="list" aria-label="Market facts">
             <span className="pill-chip" role="listitem">
-              fixture <span className="num">{market.fixtureId}</span>
+              {renderFixtureLabel(market)}
             </span>
             <span className="pill-chip" role="listitem">
               {renderPredicate(market)}

@@ -1,8 +1,8 @@
 # Roadmap
 
-Pari-Market is a working devnet proof of concept. This roadmap separates what the submission proves from work required for a safe, scalable product. It does not promise release dates.
+Pari-Market is a working devnet proof of concept. This roadmap separates what the current build proves from work required for a safe, scalable product. It does not promise release dates.
 
-## Proven in this submission
+## Proven in the current build
 
 - Permissionless market locking and resolution
 - Devnet USDC pari-mutuel deposits and proportional payouts

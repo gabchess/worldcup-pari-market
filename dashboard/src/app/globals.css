@@ -183,10 +183,10 @@ a:hover {
   color: var(--ink-muted);
 }
 
-/* ─── Audited badge (E1) -- same pill language as .pill-devnet, but a real
+/* ─── Security-notes badge -- same pill language as .pill-devnet, but a real
  * link, so it needs its own hover/underline handling (the global `a`
  * rule adds an underline on hover that would break the pill look). ────── */
-.pill-audited {
+.pill-security {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
@@ -199,7 +199,7 @@ a:hover {
   text-decoration: none;
 }
 
-.pill-audited:hover {
+.pill-security:hover {
   text-decoration: none;
   border-color: var(--ink-muted);
 }
@@ -662,6 +662,42 @@ a:hover {
 }
 
 /* ─── M5 — Pari-Market Live view ────────────────────────────── */
+
+/* A human-readable question anchors the raw pool data in the user journey. */
+.market-context {
+  margin-bottom: var(--md);
+  padding-inline: 4px;
+}
+
+.market-context-kicker {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--xs);
+}
+
+.market-context h2 {
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: var(--xs);
+}
+
+.market-context-question {
+  color: var(--ink-prose);
+  font-size: 0.9375rem;
+}
+
+.market-context-flow {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  margin-top: var(--sm);
+  text-transform: uppercase;
+}
 
 /* Status badge: LOCKED / RESOLVED variants (OPEN reuses .badge-live) */
 .status-badge {

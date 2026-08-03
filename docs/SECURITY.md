@@ -1,6 +1,6 @@
 # Security Review and Trust Model
 
-This document summarizes Pari-Market's current security posture. It describes a hackathon proof of concept, not an independent professional audit or a claim of production readiness.
+This document summarizes Pari-Market's current security posture. It describes an independent devnet proof of concept, not an independent professional audit or a claim of production readiness.
 
 ## Scope
 
@@ -66,7 +66,7 @@ Run the current suite with:
 cargo test -p pari-market
 ```
 
-Devnet transaction links for a complete lifecycle are recorded in [../SUBMISSION.md](../SUBMISSION.md).
+Devnet transaction links for a complete lifecycle are recorded in [../PROJECT-OVERVIEW.md](../PROJECT-OVERVIEW.md).
 
 ## Remaining limitations
 

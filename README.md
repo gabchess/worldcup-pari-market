@@ -4,7 +4,7 @@ Proof-settled prediction markets on Solana.
 
 Users deposit devnet USDC into a YES or NO pool. After the market locks, anyone can submit TxLINE proof material. Pari-Market CPIs into TxODDS's `validate_stat` instruction, verifies the result against TxODDS's on-chain Merkle root, and releases proportional payouts—without an admin resolution key, committee, or token vote.
 
-Built for the TxODDS World Cup Hackathon, Prediction Markets & Settlement track.
+An independent product experiment exploring proof-settled markets on Solana.
 
 > Devnet demonstration only. Pari-Market is not a real-money service and has not been reviewed for production or jurisdiction-specific legal compliance.
 
@@ -16,7 +16,7 @@ Built for the TxODDS World Cup Hackathon, Prediction Markets & Settlement track.
 | Demo video | [Watch on YouTube](https://youtu.be/2Vh6RPLNd-U) |
 | Deployed program | [`565SYm...1xc3`](https://explorer.solana.com/address/565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3?cluster=devnet) |
 | Resolution transaction | [`yG6afD4x...`](https://explorer.solana.com/tx/yG6afD4xuxxT53wkicFzUX7zkpxStJNHk5Jqrxe9NW1U6BssATHdeM3uHnz4ng7RopHM83pZ8oZxKqSiC1NA6Qb?cluster=devnet) |
-| Hackathon submission | [SUBMISSION.md](SUBMISSION.md) |
+| Project overview | [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md) |
 | TxLINE integration reference | [docs/ENDPOINTS.md](docs/ENDPOINTS.md) |
 | TxLINE feedback | [docs/TXLINE-FEEDBACK.md](docs/TXLINE-FEEDBACK.md) |
 
@@ -107,7 +107,7 @@ The Rust suite runs against a checked-in dump of the real TxODDS `txoracle` prog
 
 ## Demo scope and trust assumptions
 
-- **Historical fixture:** The demo resolves an already-finished fixture so the result and proof remain stable during judging.
+- **Historical fixture:** The demo resolves an already-finished fixture so the result and proof remain stable for repeatable verification.
 - **Delayed devnet feed:** TxODDS's devnet feed runs at service level 1 and is roughly 60 seconds behind its source.
 - **Seeded demo liquidity:** The recorded deposits are operator-seeded to make both pool sides and the ratio movement visible. The demo does not claim organic trading activity.
 - **One oracle trust anchor:** Settlement verifies one TxODDS proof against the corresponding TxODDS Merkle root on Solana. Repeating the same verification would not create independent data-source redundancy. A production design would need an explicit policy for oracle outages, incorrect roots, and independent fallback sources.
@@ -125,9 +125,9 @@ See [ROADMAP.md](ROADMAP.md) for proven functionality, the next engineering mile
 | `dashboard/` | Next.js market dashboard and wallet transaction UI |
 | `client/` | TxLINE integration and instruction builders |
 | `scripts/` | Devnet lifecycle and demo verification tools |
-| `docs/` | Security, endpoint, provenance, and sponsor-feedback documentation |
+| `docs/` | Security, endpoint, provenance, and integration documentation |
 | `video/` | Source for the demo-video overlays |
 
 ## Team and license
 
-Solo hackathon submission. Source code is available under the [MIT License](LICENSE).
+Independent project by Gabriel Abreu. Source code is available under the [MIT License](LICENSE).
