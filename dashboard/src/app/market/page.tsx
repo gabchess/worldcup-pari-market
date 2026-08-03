@@ -7,43 +7,22 @@ import {
   explorerAddr as EXPLORER_ADDR,
   explorerTx as EXPLORER_TX,
 } from "@/lib/explorer";
+import type { DecodedMarket } from "@/lib/pari";
+import {
+  BINARY_EXPR_SYMBOL,
+  COMPARISON_SYMBOL,
+  FIXTURE_DISPLAY,
+  STAT_KEY_DICTIONARY,
+  formatUsdc,
+  renderFixtureLabel,
+  renderFixtureReference,
+  renderMarketQuestion,
+  renderPredicate,
+} from "@/lib/market-display";
 import { DepositPanel } from "./DepositPanel";
 import { ClaimPanel } from "./ClaimPanel";
 
 const PARI_PROGRAM_ID = "565SYmLeQ64r8kNujRpVhnfGgAybQrXz72knMyUj1xc3";
-
-const STAT_KEY_DICTIONARY: Record<number, string> = {
-  1: "home goals",
-  2: "away goals",
-};
-const COMPARISON_SYMBOL: Record<string, string> = {
-  GreaterThan: ">",
-  LessThan: "<",
-  EqualTo: "=",
-};
-const BINARY_EXPR_SYMBOL: Record<string, string> = {
-  Add: "+",
-  Subtract: "−",
-};
-
-interface DecodedMarket {
-  marketId: string;
-  fixtureId: string;
-  epochDay: number;
-  statAKey: number;
-  statBKey: number | null;
-  op: string | null;
-  predicate: { threshold: number; comparison: string };
-  yesPool: string;
-  noPool: string;
-  usdcMint: string;
-  vault: string;
-  lockTs: string;
-  locked: boolean;
-  resolved: boolean;
-  outcome: boolean | null;
-  bump: number;
-}
 
 interface TimelineEntry {
   signature: string;
@@ -75,75 +54,6 @@ function relativeTime(unixSeconds: number | null): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
-}
-
-function formatUsdc(rawBaseUnits: string): string {
-  const n = Number(BigInt(rawBaseUnits)) / 1e6;
-  return n.toFixed(2);
-}
-
-function renderPredicate(market: DecodedMarket): string {
-  const statA =
-    STAT_KEY_DICTIONARY[market.statAKey] ?? `stat ${market.statAKey}`;
-  let lhs = statA;
-  if (market.statBKey !== null && market.op !== null) {
-    const statB =
-      STAT_KEY_DICTIONARY[market.statBKey] ?? `stat ${market.statBKey}`;
-    lhs = `${statA} ${BINARY_EXPR_SYMBOL[market.op] ?? market.op} ${statB}`;
-  }
-  const symbol =
-    COMPARISON_SYMBOL[market.predicate.comparison] ??
-    market.predicate.comparison;
-  return `${lhs} ${symbol} ${market.predicate.threshold}`;
-}
-
-// Fixture display metadata. Team
-// names + final score are DISPLAY DATA, not on-chain state -- the program
-// only stores fixture_id + the predicate it proved, never raw stat values.
-// Copy, not shared import, matching this file's self-contained pattern (see
-// header comment on the pari-client copy above).
-interface FixtureDisplayEntry {
-  label: string;
-  homeGoals: number;
-  awayGoals: number;
-}
-
-const FIXTURE_DISPLAY: Record<string, FixtureDisplayEntry> = {
-  "18172379": {
-    label: "USA vs Bosnia & Herzegovina",
-    homeGoals: 2,
-    awayGoals: 0,
-  },
-  "18179551": { label: "Spain vs Austria", homeGoals: 2, awayGoals: 0 },
-};
-
-/** Human fixture reference line, e.g. "USA vs Bosnia & Herzegovina · 2–0".
- * Falls back to the raw fixture_id when not in the static display map. */
-function renderFixtureReference(market: DecodedMarket): string {
-  const entry = FIXTURE_DISPLAY[market.fixtureId];
-  if (!entry) return `fixture ${market.fixtureId}`;
-  return `${entry.label} · ${entry.homeGoals}–${entry.awayGoals}`;
-}
-
-/** Human-readable fixture name without revealing the final score pre-resolve. */
-function renderFixtureLabel(market: DecodedMarket): string {
-  return FIXTURE_DISPLAY[market.fixtureId]?.label ?? `fixture ${market.fixtureId}`;
-}
-
-/** Plain-language question for the common home-goals-minus-away-goals market. */
-function renderMarketQuestion(market: DecodedMarket): string {
-  if (
-    market.statAKey === 1 &&
-    market.statBKey === 2 &&
-    market.op === "Subtract" &&
-    market.predicate.comparison === "GreaterThan"
-  ) {
-    const margin = market.predicate.threshold;
-    return `Will the home team win by more than ${margin} goal${
-      margin === 1 ? "" : "s"
-    }?`;
-  }
-  return `Will ${renderPredicate(market)}?`;
 }
 
 /** Proved stat values + predicate evaluation, e.g. "home goals 2 − away
@@ -299,7 +209,9 @@ export default function MarketPage() {
     <div className="container">
       {/* Header */}
       <header className="page-header">
-        <h1>World Cup Pari-Market</h1>
+        <a className="page-title-link" href="/">
+          <h1>World Cup Pari-Market</h1>
+        </a>
         <div className="header-right">
           {status === "OPEN" && (
             <span className="badge-live" aria-label="Market open">
@@ -543,23 +455,6 @@ export default function MarketPage() {
             onClaimed={fetchMarket}
           />
 
-          {/* Honest limitations (T6) -- condensed from README §Honest
-              limitations. Kept low-key at the bottom of the page. */}
-          <section className="card-panel-greek" aria-label="Honest limitations">
-            <p className="panel-title">Honest Limitations</p>
-            <p className="trace-prose">
-              Demo deposits are operator-seeded to show both pools moving --
-              there&apos;s no organic trading in this build.
-            </p>
-            <p className="trace-prose">
-              Devnet match data runs about 60 seconds behind (TxODDS&apos;s free
-              tier).
-            </p>
-            <p className="trace-prose">
-              Resolution runs off a single proof call, not a redundant
-              multi-source check.
-            </p>
-          </section>
         </>
       )}
 
