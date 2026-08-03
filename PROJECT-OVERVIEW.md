@@ -8,7 +8,7 @@ Pari-Market is an independent Solana project exploring proof-settled prediction 
 |---|---|
 | Live dashboard | [worldcup-pari-market.vercel.app/market](https://worldcup-pari-market.vercel.app/market) |
 | Repository | [github.com/gabchess/worldcup-pari-market](https://github.com/gabchess/worldcup-pari-market) |
-| Demo video | [Watch on YouTube](https://youtu.be/2Vh6RPLNd-U) |
+| Demo video | [Watch on YouTube](https://youtu.be/1HDvlMr-Fl0) |
 | Technical docs | [docs/ENDPOINTS.md](https://github.com/gabchess/worldcup-pari-market/blob/main/docs/ENDPOINTS.md) |
 
 ## What it is
