@@ -836,6 +836,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 44px;
+  justify-content: center;
   color: var(--ink);
   text-decoration: none;
 }
@@ -867,6 +869,9 @@ a:hover {
 }
 
 .lobby-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ink);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1138,6 +1143,9 @@ a:hover {
 }
 
 .lobby-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ink);
   font-weight: 600;
 }
